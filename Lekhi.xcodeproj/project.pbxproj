@@ -43,6 +43,8 @@
 		1A00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CB /* SpacebarSwipeStore.swift */; };
 		1A00000000000000000000CC /* EmojiData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CC /* EmojiData.swift */; };
 		1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
+		1A00000000000000000000CE /* KeyboardHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CE /* KeyboardHeight.swift */; };
+		1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CF /* CharacterPreviewStore.swift */; };
 		1A00000000000000000000D1 /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
 		1A00000000000000000000D2 /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
 		1A00000000000000000000D3 /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
@@ -77,6 +79,8 @@
 		1B00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CB /* SpacebarSwipeStore.swift */; };
 		1B00000000000000000000CC /* EmojiData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CC /* EmojiData.swift */; };
 		1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
+		1B00000000000000000000CE /* KeyboardHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CE /* KeyboardHeight.swift */; };
+		1B00000000000000000000CF /* CharacterPreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CF /* CharacterPreviewStore.swift */; };
 		7C4740F7303DEED90022E80F /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
 		7C4740F8303DEED90022E80F /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
 		7C4740F9303DEED90022E80F /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
@@ -155,6 +159,8 @@
 		2A00000000000000000000CB /* SpacebarSwipeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacebarSwipeStore.swift; sourceTree = "<group>"; };
 		2A00000000000000000000CC /* EmojiData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiData.swift; sourceTree = "<group>"; };
 		2A00000000000000000000CD /* EnglishSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishSuggestionService.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CE /* KeyboardHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeight.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CF /* CharacterPreviewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterPreviewStore.swift; sourceTree = "<group>"; };
 		2A00000000000000000000D1 /* dictionary.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dictionary.json; sourceTree = "<group>"; };
 		2A00000000000000000000D2 /* autocorrect.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = autocorrect.json; sourceTree = "<group>"; };
 		2A00000000000000000000D3 /* suffix.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = suffix.json; sourceTree = "<group>"; };
@@ -300,6 +306,8 @@
 				2A00000000000000000000CB /* SpacebarSwipeStore.swift */,
 				2A00000000000000000000CC /* EmojiData.swift */,
 				2A00000000000000000000CD /* EnglishSuggestionService.swift */,
+				2A00000000000000000000CE /* KeyboardHeight.swift */,
+				2A00000000000000000000CF /* CharacterPreviewStore.swift */,
 				5G00000000000000000000C1 /* Transliteration */,
 			);
 			path = SharedKit;
@@ -474,6 +482,8 @@
 				1A00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */,
 				1A00000000000000000000CC /* EmojiData.swift in Sources */,
 				1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
+				1A00000000000000000000CE /* KeyboardHeight.swift in Sources */,
+				1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -507,6 +517,8 @@
 				1B00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */,
 				1B00000000000000000000CC /* EmojiData.swift in Sources */,
 				1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
+				1B00000000000000000000CE /* KeyboardHeight.swift in Sources */,
+				1B00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,117 +651,117 @@
 			name = Release;
 		};
 		7B00000000000000000000B3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Lekhi/Lekhi.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = TZX5LG7ZW5;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Lekhi/Info.plist;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
+	buildSettings = {
+		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
+		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
+		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 8;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"ENABLE_PREVIEWS" = YES;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "Lekhi/Info.plist";
+		"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents" = YES;
+		"INFOPLIST_KEY_UILaunchScreen_Generation" = YES;
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+		"SUPPORTS_MACCATALYST" = NO;
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = 1;
+	};
+	isa = XCBuildConfiguration;
+	name = Debug;
+};
 		7B00000000000000000000B4 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = Lekhi/Lekhi.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = TZX5LG7ZW5;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Lekhi/Info.plist;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
+	buildSettings = {
+		"ASSETCATALOG_COMPILER_APPICON_NAME" = AppIcon;
+		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
+		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 8;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"ENABLE_PREVIEWS" = YES;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "Lekhi/Info.plist";
+		"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents" = YES;
+		"INFOPLIST_KEY_UILaunchScreen_Generation" = YES;
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+		"SUPPORTS_MACCATALYST" = NO;
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = 1;
+	};
+	isa = XCBuildConfiguration;
+	name = Release;
+};
 		7B00000000000000000000B5 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = LekhiKeyboard/LekhiKeyboard.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = TZX5LG7ZW5;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LekhiKeyboard/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lekhi Keyboard";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app.keyboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
+	buildSettings = {
+		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 8;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
+		"INFOPLIST_KEY_CFBundleDisplayName" = "Lekhi Keyboard";
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+			"@executable_path/../../Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app.keyboard";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SKIP_INSTALL" = YES;
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = "1,2";
+	};
+	isa = XCBuildConfiguration;
+	name = Debug;
+};
 		7B00000000000000000000B6 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = LekhiKeyboard/LekhiKeyboard.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = TZX5LG7ZW5;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = LekhiKeyboard/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lekhi Keyboard";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app.keyboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
+	buildSettings = {
+		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 8;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"GENERATE_INFOPLIST_FILE" = NO;
+		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
+		"INFOPLIST_KEY_CFBundleDisplayName" = "Lekhi Keyboard";
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"LD_RUNPATH_SEARCH_PATHS" = (
+			"$(inherited)",
+			"@executable_path/Frameworks",
+			"@executable_path/../../Frameworks",
+		);
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app.keyboard";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SKIP_INSTALL" = YES;
+		"SWIFT_EMIT_LOC_STRINGS" = YES;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = "1,2";
+	};
+	isa = XCBuildConfiguration;
+	name = Release;
+};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */

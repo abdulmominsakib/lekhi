@@ -14,15 +14,18 @@ public struct KeyboardRootView: View {
     @Bindable public var session: InputSession
     public let onAction: (KeyAction) -> Void
     public let onCommitCandidate: (Int) -> Void
+    public let onSwipeLanguage: ((Bool) -> Void)?
 
     public init(
         session: InputSession,
         onAction: @escaping (KeyAction) -> Void,
-        onCommitCandidate: @escaping (Int) -> Void
+        onCommitCandidate: @escaping (Int) -> Void,
+        onSwipeLanguage: ((Bool) -> Void)? = nil
     ) {
         self.session = session
         self.onAction = onAction
         self.onCommitCandidate = onCommitCandidate
+        self.onSwipeLanguage = onSwipeLanguage
     }
 
     @Environment(\.colorScheme) private var colorScheme
@@ -32,6 +35,8 @@ public struct KeyboardRootView: View {
     }
 
     public var body: some View {
+        let heightOption = session.heightOption
+
         VStack(spacing: 0) {
             // Suggestion / Candidate Bar (always visible)
             if !session.isEmojiMode && session.mode.showsSuggestionBar {
@@ -42,6 +47,7 @@ public struct KeyboardRootView: View {
                     palette: palette,
                     onTap: onCommitCandidate
                 )
+                .frame(height: heightOption.suggestionBarHeight)
             }
 
             // Keyboard or Emoji Picker
@@ -56,14 +62,14 @@ public struct KeyboardRootView: View {
                         onAction(.backspace(word: false))
                     }
                 )
-                .padding(.top, 4)
+                .padding(.top, heightOption.topPadding)
                 .transition(.opacity)
             } else {
                 // Mechanical Key Grid (Rows 1–4)
-                KeyboardGrid(session: session, palette: palette, onAction: onAction)
+                KeyboardGrid(session: session, palette: palette, onAction: onAction, onSwipeLanguage: onSwipeLanguage)
                     .padding(.horizontal, Theme.sideInset)
-                    .padding(.top, 4)
-                    .padding(.bottom, Theme.bottomInset)
+                    .padding(.top, heightOption.topPadding)
+                    .padding(.bottom, heightOption.bottomPadding)
                     .transition(.opacity)
             }
 
@@ -82,6 +88,7 @@ private struct KeyboardGrid: View {
     @Bindable var session: InputSession
     let palette: KeyboardColorPalette
     let onAction: (KeyAction) -> Void
+    let onSwipeLanguage: ((Bool) -> Void)?
 
     var body: some View {
         let rows: [KeyRow] = {
@@ -95,27 +102,31 @@ private struct KeyboardGrid: View {
             }
         }()
 
+        let keyHeight = session.heightOption.keyHeight
+        let rowSpacing = session.heightOption.rowSpacing
+        let totalGridHeight = (keyHeight * 4) + (rowSpacing * 3)
+
         GeometryReader { proxy in
             let totalWidth = proxy.size.width
             let standardUnit = (totalWidth - (9 * Theme.keySpacing)) / 10.0
 
-            VStack(spacing: Theme.rowSpacing) {
+            VStack(spacing: rowSpacing) {
                 ForEach(rows) { row in
-                    rowView(for: row, totalWidth: totalWidth, unitWidth: standardUnit)
+                    rowView(for: row, totalWidth: totalWidth, unitWidth: standardUnit, keyHeight: keyHeight)
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(height: (Theme.keyHeight * 4) + (Theme.rowSpacing * 3))
+        .frame(height: totalGridHeight)
     }
 
-    private func rowView(for row: KeyRow, totalWidth: CGFloat, unitWidth: CGFloat) -> some View {
+    private func rowView(for row: KeyRow, totalWidth: CGFloat, unitWidth: CGFloat, keyHeight: CGFloat) -> some View {
         let count = CGFloat(row.keys.count)
         let totalSpacing = (count - 1) * Theme.keySpacing
         let hasCustomWeights = row.keys.contains { $0.widthWeight != 1.0 }
 
         return HStack(spacing: Theme.keySpacing) {
-            ForEach(row.keys) { key in
+            ForEach(Array(row.keys.enumerated()), id: \.element.id) { index, key in
                 let keyWidth: CGFloat = {
                     if !hasCustomWeights {
                         return unitWidth
@@ -129,14 +140,24 @@ private struct KeyboardGrid: View {
                     }
                 }()
 
+                let isFirst = index == 0
+                let isLast = index == (row.keys.count - 1)
+
                 KeyboardKey(
                     descriptor: key,
                     palette: palette,
                     isShifted: session.isShifted,
                     spacebarLabel: key.kind.isSpace ? session.layout.spacebarLabel : nil,
+                    keyHeight: keyHeight,
+                    isFirstInRow: isFirst,
+                    isLastInRow: isLast,
                     onSwipeLanguage: key.kind.isSpace ? { forward in
                         withAnimation(.easeInOut(duration: 0.15)) {
-                            session.cycleLanguage(forward: forward)
+                            if let onSwipeLanguage {
+                                onSwipeLanguage(forward)
+                            } else {
+                                session.cycleLanguage(forward: forward)
+                            }
                         }
                     } : nil
                 ) {

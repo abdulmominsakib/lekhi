@@ -113,7 +113,7 @@ public final class KeyRouter {
         session.apply(suggestion)
 
         // If lonely (punctuation / single character commit outside dictionary)
-        if suggestion.isLonely && suggestion.candidates.isEmpty {
+        if suggestion.isLonely {
             let committed = suggestion.top.isEmpty ? String(c) : suggestion.top
             session.clearSuggestions()
             session.buffer = ""
@@ -164,7 +164,7 @@ public final class KeyRouter {
             }
             session.apply(suggestion)
 
-            if suggestion.candidates.isEmpty || session.buffer.isEmpty {
+            if suggestion.candidates.isEmpty || session.buffer.isEmpty || !engine.hasActiveSession {
                 session.buffer = ""
                 session.clearSuggestions()
                 engine.finishSession()
@@ -233,7 +233,7 @@ public final class KeyRouter {
         session?.isEmojiMode.toggle()
     }
 
-    private func resolveCurrentCandidate() -> String {
+    public func resolveCurrentCandidate() -> String {
         guard let session else { return "" }
         if session.selectedIndex >= 0 && session.selectedIndex < session.candidates.count {
             return session.candidates[session.selectedIndex]
@@ -249,7 +249,7 @@ public final class KeyRouter {
 
     private func commitAndFinish() {
         guard let session, let engine, session.hasActiveSession else { return }
-        if session.selectedIndex >= 0 && session.selectedIndex < session.candidates.count {
+        if session.selectedIndex >= 0 && session.selectedIndex < session.candidates.count, engine.hasActiveSession {
             _ = engine.commitCandidate(at: session.selectedIndex)
         }
         engine.finishSession()

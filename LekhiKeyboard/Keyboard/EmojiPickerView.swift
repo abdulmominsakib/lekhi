@@ -89,7 +89,7 @@ public struct EmojiPickerView: View {
                                 selectedCategory = .smileys
                             }
                         }
-                        UISelectionFeedbackGenerator().selectionChanged()
+                        HapticManager.shared.candidateSelected()
                     } label: {
                         HStack(spacing: 4) {
                             Text(filter.icon)
@@ -124,7 +124,7 @@ public struct EmojiPickerView: View {
                 Button {
                     selectedCategory = cat
                     activeFilter = ""
-                    UISelectionFeedbackGenerator().selectionChanged()
+                    HapticManager.shared.candidateSelected()
                 } label: {
                     Text(cat.icon)
                         .font(.system(size: 16))
@@ -175,7 +175,7 @@ public struct EmojiPickerView: View {
                 .padding(.vertical, 4)
             }
         }
-        .frame(maxHeight: 135)
+        .frame(maxHeight: 135 * session.heightOption.scaleFactor)
     }
 
     // MARK: - Bottom Bar

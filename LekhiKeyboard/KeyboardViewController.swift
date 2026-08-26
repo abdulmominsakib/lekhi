@@ -12,6 +12,25 @@ import SwiftUI
 
 final class KeyboardViewController: UIInputViewController {
 
+    // MARK: - Darwin notification helper
+    //
+    // We must NOT store a raw unretained pointer to `self` in the
+    // CF notification center — if the VC is ever deallocated the
+    // pointer becomes dangling and the next notification causes an
+    // EXC_BAD_ACCESS (SIGSEGV at 0x20) crash.
+    //
+    // Instead we:
+    //  • wrap `self` in a WeakBox (weak reference, no retain cycle)
+    //  • passRetained the box so the C callback always has a live object
+    //  • store the raw ptr so we can release it in deinit
+
+    private final class WeakBox {
+        weak var controller: KeyboardViewController?
+        init(_ c: KeyboardViewController) { controller = c }
+    }
+
+    private var darwinObserverPtr: UnsafeMutableRawPointer?
+
     // MARK: - State
 
     private let session = InputSession()
@@ -19,12 +38,13 @@ final class KeyboardViewController: UIInputViewController {
     private var router: KeyRouter!
 
     private var hostingController: UIHostingController<KeyboardRootView>?
+    private var heightConstraint: NSLayoutConstraint?
 
     // MARK: - Lifecycle
 
     override func loadView() {
         super.loadView()
-        updateBackgroundTheme()
+        // Do not query traitCollection before view is in hierarchy
     }
 
     override func viewDidLoad() {
@@ -48,7 +68,10 @@ final class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         session.theme = ThemeStore.current()
+        session.heightOption = KeyboardHeightStore.current()
+        session.showCharacterPreview = CharacterPreviewStore.current()
         updateBackgroundTheme()
+        updateKeyboardHeightConstraint()
         if session.layout != LayoutStore.current()
             || session.mode != TypingModeStore.current() {
             rebuildEngine()
@@ -60,11 +83,42 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateBackgroundTheme()
+        updateKeyboardHeightConstraint()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if session.hasActiveSession {
+            engine?.finishSession()
+            session.clearSuggestions()
+            session.buffer = ""
+        }
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         updateBackgroundTheme()
+        updateKeyboardHeightConstraint()
+    }
+
+    override func updateViewConstraints() {
+        super.updateViewConstraints()
+        updateKeyboardHeightConstraint()
+    }
+
+    private func updateKeyboardHeightConstraint() {
+        guard view.frame.width > 0 else { return }
+        let targetHeight = session.heightOption.totalHeight
+        if let heightConstraint {
+            if heightConstraint.constant != targetHeight {
+                heightConstraint.constant = targetHeight
+            }
+        } else {
+            let constraint = view.heightAnchor.constraint(equalToConstant: targetHeight)
+            constraint.priority = UILayoutPriority(999)
+            constraint.isActive = true
+            self.heightConstraint = constraint
+        }
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
@@ -85,11 +139,18 @@ final class KeyboardViewController: UIInputViewController {
             hostingController?.overrideUserInterfaceStyle = .unspecified
         }
 
-        let isDark = (overrideUserInterfaceStyle == .dark) || (overrideUserInterfaceStyle == .unspecified && traitCollection.userInterfaceStyle == .dark)
+        let isDark: Bool = {
+            if overrideUserInterfaceStyle == .dark { return true }
+            if overrideUserInterfaceStyle == .light { return false }
+            if isViewLoaded, let tc = viewIfLoaded?.traitCollection {
+                return tc.userInterfaceStyle == .dark
+            }
+            return UITraitCollection.current.userInterfaceStyle == .dark
+        }()
         let resolved = session.theme.resolvedPalette(for: isDark ? .dark : .light)
         let bg = resolved.uiBackgroundPlate
 
-        view.backgroundColor = bg
+        viewIfLoaded?.backgroundColor = bg
         inputView?.backgroundColor = bg
         hostingController?.view.backgroundColor = .clear
     }
@@ -105,18 +166,26 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func observeSettingsChanges() {
+        guard darwinObserverPtr == nil else { return }   // guard against double-registration
+
         let center = CFNotificationCenterGetDarwinNotifyCenter()
-        let observer = Unmanaged.passUnretained(self).toOpaque()
+        let box = WeakBox(self)
+        // passRetained keeps the box alive for the full lifetime of the registration.
+        // takeUnretainedValue() inside the C callback is therefore always safe.
+        let ptr = Unmanaged.passRetained(box).toOpaque()
+        darwinObserverPtr = ptr
+
         CFNotificationCenterAddObserver(
             center,
-            observer,
+            ptr,
             { _, observerPtr, _, _, _ in
                 guard let observerPtr else { return }
-                let controller = Unmanaged<KeyboardViewController>
+                // Safe: the +1 from passRetained keeps the box alive.
+                let box = Unmanaged<WeakBox>
                     .fromOpaque(observerPtr)
                     .takeUnretainedValue()
-                DispatchQueue.main.async {
-                    controller.handleSettingsChanged()
+                DispatchQueue.main.async { [weak box] in
+                    box?.controller?.handleSettingsChanged()
                 }
             },
             DarwinNotification.settingsChanged,
@@ -125,23 +194,57 @@ final class KeyboardViewController: UIInputViewController {
         )
     }
 
+    deinit {
+        // Remove the Darwin observer and balance the passRetained from
+        // observeSettingsChanges().  Without this the raw pointer lives
+        // forever and the next notification delivery crashes on freed memory.
+        if let ptr = darwinObserverPtr {
+            CFNotificationCenterRemoveObserver(
+                CFNotificationCenterGetDarwinNotifyCenter(),
+                ptr,
+                CFNotificationName(DarwinNotification.settingsChanged),
+                nil
+            )
+            Unmanaged<WeakBox>.fromOpaque(ptr).release()   // balance passRetained
+            darwinObserverPtr = nil
+        }
+    }
+
     private func handleSettingsChanged() {
         let newLayout = LayoutStore.current()
         let newMode = TypingModeStore.current()
         let newTheme = ThemeStore.current()
+        let newHeight = KeyboardHeightStore.current()
+        let newPreview = CharacterPreviewStore.current()
+
+        var needsReinstall = false
 
         if session.theme != newTheme {
             session.theme = newTheme
             updateBackgroundTheme()
         }
 
-        guard newLayout != session.layout || newMode != session.mode else {
-            return
+        if session.heightOption != newHeight {
+            session.heightOption = newHeight
+            updateKeyboardHeightConstraint()
+            needsReinstall = true
         }
-        session.layout = newLayout
-        session.mode = newMode
-        rebuildEngine()
-        router = KeyRouter(session: session, engine: engine)
+
+        if session.showCharacterPreview != newPreview {
+            session.showCharacterPreview = newPreview
+        }
+
+        if newLayout != session.layout || newMode != session.mode {
+            session.layout = newLayout
+            session.mode = newMode
+            rebuildEngine()
+            router = KeyRouter(session: session, engine: engine)
+            needsReinstall = true
+        }
+
+        if needsReinstall {
+            installKeyboardView()
+        }
     }
 
     // MARK: - SwiftUI hosting
@@ -158,6 +261,9 @@ final class KeyboardViewController: UIInputViewController {
             },
             onCommitCandidate: { [weak self] index in
                 self?.commitCandidate(at: index)
+            },
+            onSwipeLanguage: { [weak self] forward in
+                self?.handleSwipeLanguage(forward: forward)
             }
         )
 
@@ -178,17 +284,27 @@ final class KeyboardViewController: UIInputViewController {
         hostingController = host
     }
 
+    private func handleSwipeLanguage(forward: Bool) {
+        if session.hasActiveSession {
+            let chosen = router.resolveCurrentCandidate()
+            if !chosen.isEmpty {
+                textDocumentProxy.insertText(chosen + " ")
+            }
+            engine?.finishSession()
+            session.clearSuggestions()
+            session.buffer = ""
+        }
+        session.cycleLanguage(forward: forward)
+        rebuildEngine()
+        router = KeyRouter(session: session, engine: engine)
+        HapticManager.shared.candidateSelected()
+    }
+
     private var isDispatching = false
 
     // MARK: - Action dispatch
 
     private func dispatch(action: KeyAction) {
-        if case .character = action {
-            UISelectionFeedbackGenerator().selectionChanged()
-        } else if case .backspace = action {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        }
-
         isDispatching = true
         defer { isDispatching = false }
 
@@ -232,7 +348,7 @@ final class KeyboardViewController: UIInputViewController {
             textDocumentProxy.insertText(chosen + " ")
             session.buffer = ""
             session.clearSuggestions()
-            UISelectionFeedbackGenerator().selectionChanged()
+            HapticManager.shared.candidateSelected()
             return
         }
 
@@ -242,7 +358,7 @@ final class KeyboardViewController: UIInputViewController {
         textDocumentProxy.insertText(chosen)
         session.buffer = ""
         session.clearSuggestions()
-        UISelectionFeedbackGenerator().selectionChanged()
+        HapticManager.shared.candidateSelected()
     }
 
     // MARK: - Text-document callbacks
@@ -253,10 +369,5 @@ final class KeyboardViewController: UIInputViewController {
 
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
-        guard !isDispatching else { return }
-        // End the session if the user moved the cursor externally.
-        engine?.finishSession()
-        session.clearSuggestions()
-        session.buffer = ""
     }
 }

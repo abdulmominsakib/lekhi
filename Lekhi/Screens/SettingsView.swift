@@ -12,6 +12,8 @@ struct SettingsView: View {
     @State private var theme: KeyboardThemeID = ThemeStore.current()
     @State private var switchSound: MechanicalSwitchProfile = SoundStore.current()
     @State private var haptics: HapticIntensity = HapticStore.current()
+    @State private var keyboardHeight: KeyboardHeightOption = KeyboardHeightStore.current()
+    @State private var characterPreview: Bool = CharacterPreviewStore.current()
     @State private var typingMode: TypingMode = TypingModeStore.current()
     @State private var layout: Layout = LayoutStore.current()
     @State private var bengaliDigits: Bool = BengaliDigitStore.current()
@@ -22,6 +24,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Feedback & Interaction
                 Section {
                     Toggle("Key Click Sounds", isOn: $soundEnabled)
                         .onChange(of: soundEnabled) { _, on in
@@ -44,15 +47,63 @@ struct SettingsView: View {
 
                     Toggle("Haptic Feedback", isOn: $hapticsEnabled)
                         .onChange(of: hapticsEnabled) { _, on in
-                            let newIntensity: HapticIntensity = on ? .medium : .off
+                            let newIntensity: HapticIntensity = on ? (haptics == .off ? .subtle : haptics) : .off
                             haptics = newIntensity
                             HapticStore.set(newIntensity)
                             if on { HapticManager.shared.keyPress(isAction: true) }
                         }
+
+                    if hapticsEnabled {
+                        Picker("Haptic Intensity", selection: $haptics) {
+                            ForEach(HapticIntensity.allCases.filter { $0 != .off }) { intensity in
+                                Text(intensity.displayName).tag(intensity)
+                            }
+                        }
+                        .onChange(of: haptics) { _, newValue in
+                            HapticStore.set(newValue)
+                            HapticManager.shared.keyPress(isAction: true)
+                        }
+                    }
+
+                    Toggle("Key Popups (Character Preview)", isOn: $characterPreview)
+                        .onChange(of: characterPreview) { _, newValue in
+                            CharacterPreviewStore.set(newValue)
+                        }
                 } header: {
-                    Text("Feedback")
+                    Text("Feedback & Touch")
                 } footer: {
-                    Text("Toggle key click sounds and haptic vibration. Sound profile is only available when sounds are on.")
+                    Text("Customize key click sounds, tactile Taptic vibrations, and Apple-style character magnification popups.")
+                }
+
+                // Keyboard Height Adjustment
+                Section {
+                    Picker("Keyboard Height", selection: $keyboardHeight) {
+                        ForEach(KeyboardHeightOption.allCases) { item in
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(item.displayName)
+                                        .font(.system(size: 15, weight: .medium))
+                                    Spacer()
+                                    Text("\(Int(item.scaleFactor * 100))%")
+                                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                        .foregroundStyle(item == keyboardHeight ? Color.blue : .secondary)
+                                }
+                                Text(item.subtitle)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .tag(item)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                } header: {
+                    Text("Keyboard Height")
+                } footer: {
+                    Text("Adjust keycap size and keyboard height to fit your typing ergonomics.")
+                }
+                .onChange(of: keyboardHeight) { _, newValue in
+                    KeyboardHeightStore.set(newValue)
                 }
 
                 // Keyboard Theme

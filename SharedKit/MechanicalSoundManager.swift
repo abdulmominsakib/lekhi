@@ -81,47 +81,49 @@ public final class MechanicalSoundManager: @unchecked Sendable {
         let profile = SoundStore.current()
         guard profile != .off else { return }
 
-        switch profile {
-        case .off:
-            break
+        DispatchQueue.global(qos: .userInitiated).async {
+            switch profile {
+            case .off:
+                break
 
-        case .classic:
-            if isModifier {
-                AudioServicesPlaySystemSound(1156) // Modifier click
-            } else if isReturn {
-                AudioServicesPlaySystemSound(1105) // Return click
-            } else {
-                AudioServicesPlaySystemSound(1104) // Standard keyboard tap
-            }
+            case .classic:
+                if isModifier {
+                    AudioServicesPlaySystemSound(1156) // Modifier click
+                } else if isReturn {
+                    AudioServicesPlaySystemSound(1105) // Return click
+                } else {
+                    AudioServicesPlaySystemSound(1104) // Standard keyboard tap
+                }
 
-        case .blue:
-            // High clicky system sound mapping
-            if isReturn {
-                AudioServicesPlaySystemSound(1105)
-            } else if isSpace {
-                AudioServicesPlaySystemSound(1104)
-            } else if isModifier {
-                AudioServicesPlaySystemSound(1156)
-            } else {
-                AudioServicesPlaySystemSound(1123)
-            }
+            case .blue:
+                // High clicky system sound mapping
+                if isReturn {
+                    AudioServicesPlaySystemSound(1105)
+                } else if isSpace {
+                    AudioServicesPlaySystemSound(1104)
+                } else if isModifier {
+                    AudioServicesPlaySystemSound(1156)
+                } else {
+                    AudioServicesPlaySystemSound(1104)
+                }
 
-        case .brown:
-            // Deeper tactile thock
-            if isReturn {
-                AudioServicesPlaySystemSound(1105)
-            } else if isModifier {
-                AudioServicesPlaySystemSound(1155)
-            } else {
-                AudioServicesPlaySystemSound(1104)
-            }
+            case .brown:
+                // Deeper tactile thock
+                if isReturn {
+                    AudioServicesPlaySystemSound(1105)
+                } else if isModifier {
+                    AudioServicesPlaySystemSound(1155)
+                } else {
+                    AudioServicesPlaySystemSound(1104)
+                }
 
-        case .red:
-            // Smooth linear softer tap
-            if isModifier {
-                AudioServicesPlaySystemSound(1156)
-            } else {
-                AudioServicesPlaySystemSound(1104)
+            case .red:
+                // Smooth linear softer tap
+                if isModifier {
+                    AudioServicesPlaySystemSound(1156)
+                } else {
+                    AudioServicesPlaySystemSound(1104)
+                }
             }
         }
     }

@@ -157,7 +157,9 @@ public final class RitiEngine: LekhiEngine {
 
     public func commitCandidate(at index: Int) -> Suggestion {
         guard let ctx = primaryCtx else { return .empty }
-        riti_context_candidate_committed(ctx, UInt(index))
+        if riti_context_ongoing_input_session(ctx) {
+            riti_context_candidate_committed(ctx, UInt(index))
+        }
         finishSession()
         return .empty
     }
@@ -191,12 +193,20 @@ public final class RitiEngine: LekhiEngine {
         let isLonely = riti_suggestion_is_lonely(raw)
 
         // Lonely / single suggestion is the phonetic inline commit.
-        if isLonely, let lonely = riti_suggestion_get_lonely_suggestion(raw) {
-            defer { riti_string_free(lonely) }
-            let text = String(cString: lonely)
+        if isLonely {
+            if let lonely = riti_suggestion_get_lonely_suggestion(raw) {
+                defer { riti_string_free(lonely) }
+                let text = String(cString: lonely)
+                return Suggestion(
+                    candidates: text.isEmpty ? [] : [text],
+                    preEditText: text,
+                    defaultIndex: 0,
+                    isLonely: true
+                )
+            }
             return Suggestion(
-                candidates: text.isEmpty ? [] : [text],
-                preEditText: text,
+                candidates: [],
+                preEditText: "",
                 defaultIndex: 0,
                 isLonely: true
             )
@@ -212,15 +222,27 @@ public final class RitiEngine: LekhiEngine {
             }
         }
 
+        let defaultIdx = defaultIndexIn(raw: raw, candidates: candidates)
+
         let preEdit: String = {
+            if !candidates.isEmpty {
+                let safeIdx = UInt(min(defaultIdx, candidates.count - 1))
+                if let p = riti_suggestion_get_pre_edit_text(raw, safeIdx) {
+                    defer { riti_string_free(p) }
+                    return String(cString: p)
+                }
+                if candidates.indices.contains(defaultIdx) {
+                    return candidates[defaultIdx]
+                }
+                return candidates.first ?? ""
+            }
             if let p = riti_suggestion_get_pre_edit_text(raw, 0) {
                 defer { riti_string_free(p) }
                 return String(cString: p)
             }
-            return candidates.first ?? ""
+            return ""
         }()
 
-        let defaultIdx = defaultIndexIn(raw: raw, candidates: candidates)
         return Suggestion(
             candidates: candidates,
             preEditText: preEdit,

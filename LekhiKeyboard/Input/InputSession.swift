@@ -16,6 +16,8 @@ public final class InputSession {
     public var layout: Layout
     public var mode: TypingMode
     public var theme: KeyboardThemeID
+    public var heightOption: KeyboardHeightOption
+    public var showCharacterPreview: Bool
 
     // MARK: - View state
 
@@ -52,11 +54,15 @@ public final class InputSession {
     public init(
         layout: Layout = LayoutStore.current(),
         mode: TypingMode = TypingModeStore.current(),
-        theme: KeyboardThemeID = ThemeStore.current()
+        theme: KeyboardThemeID = ThemeStore.current(),
+        heightOption: KeyboardHeightOption = KeyboardHeightStore.current(),
+        showCharacterPreview: Bool = CharacterPreviewStore.current()
     ) {
         self.layout = layout
         self.mode = mode
         self.theme = theme
+        self.heightOption = heightOption
+        self.showCharacterPreview = showCharacterPreview
     }
 
     // MARK: - Mutation helpers
@@ -66,7 +72,7 @@ public final class InputSession {
         candidates = suggestion.topThree
         preEditText = suggestion.preEditText
         selectedIndex = candidates.isEmpty ? -1 : suggestion.defaultIndex
-        hasActiveSession = !suggestion.candidates.isEmpty
+        hasActiveSession = !suggestion.candidates.isEmpty && !suggestion.isLonely
     }
 
     /// Clear the suggestion bar.

@@ -24,7 +24,9 @@
 
 - **⌨️ Avro Phonetic Typing**: Write natural Bengali using intuitive phonetic English syntax (e.g., `ami` → **আমি**, `bangla` → **বাংলা**).
 - **🔊 Tactile 3D Mechanical Keycaps & Audio**: Authentic mechanical switch sound profiles (**Blue Switch (Clicky)**, **Brown Switch (Tactile)**, **Red Switch (Linear)**, **Black Switch**, and **Cream Switch**).
-- **📳 Haptic Touch Engine**: Responsive, finely-tuned physical vibration for every keystroke.
+- **📳 Haptic Touch Engine**: Responsive, finely-tuned physical vibration for every keystroke with adjustable intensity (**Light**, **Medium**, **Strong**) that works reliably even without "Full Access".
+- **🔍 Apple-Style Keypress Highlight & Popups**: Native elevated character preview magnification balloons and active keypress depression on touch-down.
+- **📐 Adjustable Keyboard Height**: 5 calibrated ergonomic height options (**Compact**, **Standard**, **Medium Tall**, **Tall**, and **Extra Tall**) to fit any screen size or thumb reach.
 - **📚 150,000+ Word Dictionary & Smart Autocorrect**: On-device candidate suggestions with a three-card suggestion bar.
 - **🔄 Multi-Layout & Spacebar Swipe**: Instant switching between **Avro Phonetic**, **Probhat Layout**, and **English** with a simple swipe on the spacebar.
 - **🔢 Bengali Numerals (১, ২, ৩)**: Toggleable auto-conversion for numbers to native Bengali digits.

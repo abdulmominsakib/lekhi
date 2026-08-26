@@ -6,9 +6,11 @@
 //
 
 import UIKit
+import AudioToolbox
 
 public enum HapticIntensity: String, CaseIterable, Identifiable, Sendable {
     case off = "off"
+    case subtle = "subtle"
     case light = "light"
     case medium = "medium"
     case strong = "strong"
@@ -18,9 +20,10 @@ public enum HapticIntensity: String, CaseIterable, Identifiable, Sendable {
     public var displayName: String {
         switch self {
         case .off:    return "Off"
-        case .light:  return "Light (Subtle)"
+        case .subtle: return "Ultra Subtle (Feather Soft)"
+        case .light:  return "Light (Gentle Click)"
         case .medium: return "Medium (Mechanical Click)"
-        case .strong: return "Strong (Heavy Tactile)"
+        case .strong: return "Strong (Tactile Thock)"
         }
     }
 }
@@ -34,7 +37,7 @@ public enum HapticStore {
            let intensity = HapticIntensity(rawValue: raw) {
             return intensity
         }
-        return .medium
+        return .subtle
     }
 
     public static func set(_ intensity: HapticIntensity) {
@@ -46,9 +49,11 @@ public enum HapticStore {
 public final class HapticManager: @unchecked Sendable {
     public static let shared = HapticManager()
 
+    private let softGenerator = UIImpactFeedbackGenerator(style: .soft)
     private let lightGenerator = UIImpactFeedbackGenerator(style: .light)
     private let mediumGenerator = UIImpactFeedbackGenerator(style: .medium)
     private let rigidGenerator = UIImpactFeedbackGenerator(style: .rigid)
+    private let heavyGenerator = UIImpactFeedbackGenerator(style: .heavy)
     private let selectionGenerator = UISelectionFeedbackGenerator()
 
     private init() {
@@ -56,12 +61,15 @@ public final class HapticManager: @unchecked Sendable {
     }
 
     public func prepare() {
+        softGenerator.prepare()
         lightGenerator.prepare()
         mediumGenerator.prepare()
         rigidGenerator.prepare()
+        heavyGenerator.prepare()
         selectionGenerator.prepare()
     }
 
+    /// Triggers a finely tuned haptic impulse matching the user's intensity preference.
     public func keyPress(isAction: Bool = false) {
         let intensity = HapticStore.current()
         guard intensity != .off else { return }
@@ -69,26 +77,47 @@ public final class HapticManager: @unchecked Sendable {
         switch intensity {
         case .off:
             break
+
+        case .subtle:
+            // Ultra-gentle, whisper-soft cushion tap (zero jarring motor vibration)
+            softGenerator.prepare()
+            softGenerator.impactOccurred(intensity: 0.18)
+
         case .light:
-            lightGenerator.impactOccurred(intensity: 0.6)
+            // Subtle, crisp light keystroke tap
+            if isAction {
+                lightGenerator.prepare()
+                lightGenerator.impactOccurred(intensity: 0.55)
+            } else {
+                softGenerator.prepare()
+                softGenerator.impactOccurred(intensity: 0.48)
+            }
+
         case .medium:
             if isAction {
-                mediumGenerator.impactOccurred(intensity: 0.8)
+                mediumGenerator.prepare()
+                mediumGenerator.impactOccurred(intensity: 0.75)
             } else {
-                rigidGenerator.impactOccurred(intensity: 0.7)
+                rigidGenerator.prepare()
+                rigidGenerator.impactOccurred(intensity: 0.65)
             }
+
         case .strong:
             if isAction {
-                rigidGenerator.impactOccurred(intensity: 1.0)
+                heavyGenerator.prepare()
+                heavyGenerator.impactOccurred(intensity: 1.0)
             } else {
-                mediumGenerator.impactOccurred(intensity: 1.0)
+                heavyGenerator.prepare()
+                heavyGenerator.impactOccurred(intensity: 0.9)
             }
         }
     }
 
+    /// Haptic feedback when a candidate or suggestion is selected from the bar or language switched.
     public func candidateSelected() {
         let intensity = HapticStore.current()
         guard intensity != .off else { return }
+        selectionGenerator.prepare()
         selectionGenerator.selectionChanged()
     }
 }

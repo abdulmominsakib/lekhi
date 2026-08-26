@@ -2,9 +2,8 @@
 //  KeyboardKey.swift
 //  LekhiKeyboard
 //
-//  A mechanical keycap with bevel, shadow, and spring-down animation.
-//  Clean Latin-only labels — no Bengali hints on the keycap face.
-//  Feedback fires only once on touch-down via the custom button style.
+//  A mechanical keycap with bevel, shadow, spring-down animation,
+//  and Apple-style elevated character preview balloon on touch-down.
 //
 
 import SwiftUI
@@ -15,6 +14,9 @@ public struct KeyboardKey: View {
     public let palette: KeyboardColorPalette
     public let isShifted: Bool
     public let spacebarLabel: String?
+    public let keyHeight: CGFloat
+    public let isFirstInRow: Bool
+    public let isLastInRow: Bool
     public let onSwipeLanguage: ((Bool) -> Void)?
     public let onPress: () -> Void
 
@@ -27,6 +29,9 @@ public struct KeyboardKey: View {
         palette: KeyboardColorPalette = Theme.palette,
         isShifted: Bool = false,
         spacebarLabel: String? = nil,
+        keyHeight: CGFloat = Theme.keyHeight,
+        isFirstInRow: Bool = false,
+        isLastInRow: Bool = false,
         onSwipeLanguage: ((Bool) -> Void)? = nil,
         onPress: @escaping () -> Void
     ) {
@@ -34,8 +39,15 @@ public struct KeyboardKey: View {
         self.palette = palette
         self.isShifted = isShifted
         self.spacebarLabel = spacebarLabel
+        self.keyHeight = keyHeight
+        self.isFirstInRow = isFirstInRow
+        self.isLastInRow = isLastInRow
         self.onSwipeLanguage = onSwipeLanguage
         self.onPress = onPress
+    }
+
+    private var shouldShowCharacterPreview: Bool {
+        CharacterPreviewStore.current() && descriptor.kind == .letter && descriptor.label.count <= 2
     }
 
     public var body: some View {
@@ -54,9 +66,16 @@ public struct KeyboardKey: View {
             // 2. Key Face — slides down on press
             keyFaceView
                 .offset(y: isPressed ? Theme.pressedDepression : 0)
+
+            // 3. Apple-style Elevated Character Preview Popup
+            if isPressed && shouldShowCharacterPreview {
+                keyPreviewPopup
+                    .zIndex(1000)
+            }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: Theme.keyHeight)
+        .frame(height: keyHeight)
+        .zIndex(isPressed ? 999 : 1)
         .contentShape(RoundedRectangle(cornerRadius: Theme.keyCornerRadius, style: .continuous))
         .gesture(
             DragGesture(minimumDistance: 0)
@@ -71,16 +90,14 @@ public struct KeyboardKey: View {
 
                     if descriptor.kind.isSpace && SpacebarSwipeStore.current() && onSwipeLanguage != nil {
                         dragOffset = value.translation.width
-                        if !hasSwiped {
-                            if dragOffset > 35 {
-                                hasSwiped = true
-                                UISelectionFeedbackGenerator().selectionChanged()
-                                onSwipeLanguage?(true)
-                            } else if dragOffset < -35 {
-                                hasSwiped = true
-                                UISelectionFeedbackGenerator().selectionChanged()
-                                onSwipeLanguage?(false)
-                            }
+                        let horizontalDrag = abs(value.translation.width)
+                        let verticalDrag = abs(value.translation.height)
+
+                        // Require intentional horizontal drag (> 55pt) to avoid accidental triggers during typing
+                        if !hasSwiped && horizontalDrag > 55 && horizontalDrag > verticalDrag * 1.4 {
+                            hasSwiped = true
+                            HapticManager.shared.candidateSelected()
+                            onSwipeLanguage?(value.translation.width > 0)
                         }
                     }
                 }
@@ -88,7 +105,7 @@ public struct KeyboardKey: View {
                     if descriptor.kind.isSpace && !hasSwiped {
                         onPress()
                     }
-                    withAnimation(.easeOut(duration: 0.12)) {
+                    withAnimation(.easeOut(duration: 0.10)) {
                         isPressed = false
                         hasSwiped = false
                         dragOffset = 0
@@ -100,10 +117,10 @@ public struct KeyboardKey: View {
     // MARK: - Key Face
 
     private var keyFaceView: some View {
-        let faceHeight = Theme.keyHeight - (isPressed ? 1.5 : Theme.bevelHeight)
+        let faceHeight = keyHeight - (isPressed ? 1.5 : Theme.bevelHeight)
 
         return ZStack {
-            // Face background
+            // Face background with active press highlight
             RoundedRectangle(cornerRadius: Theme.keyCornerRadius, style: .continuous)
                 .fill(
                     isPressed
@@ -119,7 +136,7 @@ public struct KeyboardKey: View {
                 .stroke(
                     descriptor.kind.isReturn
                         ? Color.white.opacity(0.35)
-                        : Color.white.opacity(0.65),
+                        : (isPressed ? Color.white.opacity(0.20) : Color.white.opacity(0.65)),
                     lineWidth: 0.75
                 )
 
@@ -131,6 +148,51 @@ public struct KeyboardKey: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: faceHeight)
+    }
+
+    // MARK: - Apple-style Character Preview Popup
+
+    private var keyPreviewPopup: some View {
+        let popupWidth: CGFloat = 52.0
+        let popupHeight: CGFloat = max(keyHeight * 1.18, 52.0)
+        let horizontalShift: CGFloat = isFirstInRow ? 7.0 : (isLastInRow ? -7.0 : 0.0)
+
+        return ZStack {
+            // Popup Balloon Body
+            VStack(spacing: 0) {
+                // Top bubble containing the magnified character
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(palette.keyFaceTop)
+                        .shadow(color: Color.black.opacity(0.25), radius: 6, x: 0, y: 2)
+
+                    // Top specular highlight
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color.white.opacity(0.6), lineWidth: 0.75)
+
+                    // Subtle border
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(palette.keyBorder, lineWidth: 0.5)
+
+                    // Magnified character glyph
+                    Text(descriptor.label)
+                        .font(.system(size: descriptor.label.count == 1 ? 34 : 26, weight: .regular, design: .default))
+                        .foregroundStyle(palette.keyForeground)
+                }
+                .frame(width: popupWidth, height: popupHeight)
+
+                // Seamless lower stem overlapping the key base
+                RoundedRectangle(cornerRadius: Theme.keyCornerRadius, style: .continuous)
+                    .fill(palette.keyFaceTop)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 12)
+                    .offset(y: -4)
+            }
+        }
+        .frame(width: popupWidth)
+        .offset(x: horizontalShift, y: -(popupHeight + 2))
+        .allowsHitTesting(false)
+        .transition(.identity)
     }
 
     // MARK: - Glyph
@@ -216,3 +278,4 @@ public struct KeyboardKey: View {
         }
     }
 }
+
