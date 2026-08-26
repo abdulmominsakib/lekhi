@@ -1,0 +1,786 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1A00000000000000000000A1 /* LekhiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A1 /* LekhiApp.swift */; };
+		1A00000000000000000000A2 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A2 /* OnboardingView.swift */; };
+		1A00000000000000000000A3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A3 /* HomeView.swift */; };
+		1A00000000000000000000A4 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A4 /* SettingsView.swift */; };
+		1A00000000000000000000A5 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A5 /* AboutView.swift */; };
+		1A00000000000000000000A6 /* TestTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A6 /* TestTextFieldView.swift */; };
+		1A00000000000000000000A7 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A7 /* MainTabView.swift */; };
+		1A00000000000000000000A8 /* KeyboardPreviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A8 /* KeyboardPreviewScreen.swift */; };
+		1A00000000000000000000A9 /* CheatSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000A9 /* CheatSheetView.swift */; };
+		1A00000000000000000000AA /* TypingSpeedGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000AA /* TypingSpeedGameView.swift */; };
+		1A00000000000000000000B0 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B0 /* KeyboardViewController.swift */; };
+		1A00000000000000000000B2 /* KeyboardRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B2 /* KeyboardRootView.swift */; };
+		1A00000000000000000000B3 /* KeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B3 /* KeyboardLayout.swift */; };
+		1A00000000000000000000B4 /* KeyboardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B4 /* KeyboardKey.swift */; };
+		1A00000000000000000000B5 /* KeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B5 /* KeyAction.swift */; };
+		1A00000000000000000000B6 /* KeyKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B6 /* KeyKind.swift */; };
+		1A00000000000000000000B7 /* SuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B7 /* SuggestionBarView.swift */; };
+		1A00000000000000000000B8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B8 /* Theme.swift */; };
+		1A00000000000000000000B9 /* InputSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B9 /* InputSession.swift */; };
+		1A00000000000000000000BA /* KeyRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BA /* KeyRouter.swift */; };
+		1A00000000000000000000BB /* BengaliDigitInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BB /* BengaliDigitInput.swift */; };
+		1A00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
+		1A00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
+		1A00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
+		1A00000000000000000000C2 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C2 /* Layout.swift */; };
+		1A00000000000000000000C3 /* TypingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C3 /* TypingMode.swift */; };
+		1A00000000000000000000C4 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C4 /* Suggestion.swift */; };
+		1A00000000000000000000C5 /* LekhiEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C5 /* LekhiEngine.swift */; };
+		1A00000000000000000000C6 /* RitiEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C6 /* RitiEngine.swift */; };
+		1A00000000000000000000C7 /* BengaliDigitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C7 /* BengaliDigitStore.swift */; };
+		1A00000000000000000000C8 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C8 /* HapticManager.swift */; };
+		1A00000000000000000000C9 /* MechanicalSoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C9 /* MechanicalSoundManager.swift */; };
+		1A00000000000000000000CA /* KeyboardTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CA /* KeyboardTheme.swift */; };
+		1A00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CB /* SpacebarSwipeStore.swift */; };
+		1A00000000000000000000CC /* EmojiData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CC /* EmojiData.swift */; };
+		1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
+		1A00000000000000000000D1 /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
+		1A00000000000000000000D2 /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
+		1A00000000000000000000D3 /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
+		1A00000000000000000000D4 /* probhat.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D4 /* probhat.json */; };
+		1A00000000000000000000D5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D5 /* Assets.xcassets */; };
+		1A00000000000000000000E0 /* LekhiKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000E1 /* LekhiKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1A00000000000000000000E2 /* RitiFFI.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000E2 /* RitiFFI.xcframework */; };
+		1A00000000000000000000E3 /* RitiFFI.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000E2 /* RitiFFI.xcframework */; };
+		1A00000000000000000000E4 /* RitiFFI.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000E2 /* RitiFFI.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1B00000000000000000000B2 /* KeyboardRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B2 /* KeyboardRootView.swift */; };
+		1B00000000000000000000B3 /* KeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B3 /* KeyboardLayout.swift */; };
+		1B00000000000000000000B4 /* KeyboardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B4 /* KeyboardKey.swift */; };
+		1B00000000000000000000B5 /* KeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B5 /* KeyAction.swift */; };
+		1B00000000000000000000B6 /* KeyKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B6 /* KeyKind.swift */; };
+		1B00000000000000000000B7 /* SuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B7 /* SuggestionBarView.swift */; };
+		1B00000000000000000000B8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B8 /* Theme.swift */; };
+		1B00000000000000000000B9 /* InputSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B9 /* InputSession.swift */; };
+		1B00000000000000000000BA /* KeyRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BA /* KeyRouter.swift */; };
+		1B00000000000000000000BB /* BengaliDigitInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BB /* BengaliDigitInput.swift */; };
+		1B00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
+		1B00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
+		1B00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
+		1B00000000000000000000C2 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C2 /* Layout.swift */; };
+		1B00000000000000000000C3 /* TypingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C3 /* TypingMode.swift */; };
+		1B00000000000000000000C4 /* Suggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C4 /* Suggestion.swift */; };
+		1B00000000000000000000C5 /* LekhiEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C5 /* LekhiEngine.swift */; };
+		1B00000000000000000000C6 /* RitiEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C6 /* RitiEngine.swift */; };
+		1B00000000000000000000C7 /* BengaliDigitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C7 /* BengaliDigitStore.swift */; };
+		1B00000000000000000000C8 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C8 /* HapticManager.swift */; };
+		1B00000000000000000000C9 /* MechanicalSoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C9 /* MechanicalSoundManager.swift */; };
+		1B00000000000000000000CA /* KeyboardTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CA /* KeyboardTheme.swift */; };
+		1B00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CB /* SpacebarSwipeStore.swift */; };
+		1B00000000000000000000CC /* EmojiData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CC /* EmojiData.swift */; };
+		1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
+		7C4740F7303DEED90022E80F /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
+		7C4740F8303DEED90022E80F /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
+		7C4740F9303DEED90022E80F /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
+		7C4740FA303DEED90022E80F /* probhat.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D4 /* probhat.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9T00000000000000000000B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7P00000000000000000000A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6T00000000000000000000B1;
+			remoteInfo = LekhiKeyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3C00000000000000000000E0 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1A00000000000000000000E0 /* LekhiKeyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C00000000000000000000E1 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A00000000000000000000E4 /* RitiFFI.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2A00000000000000000000A1 /* LekhiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LekhiApp.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A2 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A3 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A5 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A6 /* TestTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestTextFieldView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A7 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A8 /* KeyboardPreviewScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardPreviewScreen.swift; sourceTree = "<group>"; };
+		2A00000000000000000000A9 /* CheatSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheatSheetView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000AA /* TypingSpeedGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingSpeedGameView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B0 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B2 /* KeyboardRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardRootView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B3 /* KeyboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardLayout.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B4 /* KeyboardKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKey.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B5 /* KeyAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAction.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B6 /* KeyKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyKind.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B7 /* SuggestionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionBarView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		2A00000000000000000000B9 /* InputSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSession.swift; sourceTree = "<group>"; };
+		2A00000000000000000000BA /* KeyRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyRouter.swift; sourceTree = "<group>"; };
+		2A00000000000000000000BB /* BengaliDigitInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BengaliDigitInput.swift; sourceTree = "<group>"; };
+		2A00000000000000000000BC /* EmojiPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerView.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C0 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C1 /* DataPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPaths.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C2 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C3 /* TypingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingMode.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C4 /* Suggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suggestion.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C5 /* LekhiEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LekhiEngine.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C6 /* RitiEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitiEngine.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C7 /* BengaliDigitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BengaliDigitStore.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C8 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		2A00000000000000000000C9 /* MechanicalSoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MechanicalSoundManager.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CA /* KeyboardTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardTheme.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CB /* SpacebarSwipeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacebarSwipeStore.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CC /* EmojiData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiData.swift; sourceTree = "<group>"; };
+		2A00000000000000000000CD /* EnglishSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishSuggestionService.swift; sourceTree = "<group>"; };
+		2A00000000000000000000D1 /* dictionary.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dictionary.json; sourceTree = "<group>"; };
+		2A00000000000000000000D2 /* autocorrect.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = autocorrect.json; sourceTree = "<group>"; };
+		2A00000000000000000000D3 /* suffix.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = suffix.json; sourceTree = "<group>"; };
+		2A00000000000000000000D4 /* probhat.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = probhat.json; sourceTree = "<group>"; };
+		2A00000000000000000000D5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2A00000000000000000000E1 /* LekhiKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LekhiKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A00000000000000000000E2 /* RitiFFI.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = RitiFFI.xcframework; sourceTree = "<group>"; };
+		2A00000000000000000000E4 /* LekhiKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LekhiKeyboard.entitlements; sourceTree = "<group>"; };
+		2A00000000000000000000E5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2A00000000000000000000E6 /* Lekhi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lekhi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A00000000000000000000E7 /* Lekhi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Lekhi.entitlements; sourceTree = "<group>"; };
+		2A00000000000000000000E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = LekhiKeyboard/Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4F00000000000000000000A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000000000000000000E2 /* RitiFFI.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4F00000000000000000000B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000000000000000000E3 /* RitiFFI.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5G00000000000000000000A1 = {
+			isa = PBXGroup;
+			children = (
+				5G00000000000000000000A2 /* Lekhi */,
+				5G00000000000000000000B1 /* LekhiKeyboard */,
+				5G00000000000000000000C0 /* SharedKit */,
+				5G00000000000000000000D0 /* Frameworks */,
+				5G00000000000000000000E0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000A2 /* Lekhi */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000A1 /* LekhiApp.swift */,
+				5G00000000000000000000A3 /* Onboarding */,
+				5G00000000000000000000A4 /* Screens */,
+				5G00000000000000000000A5 /* Resources */,
+				2A00000000000000000000D5 /* Assets.xcassets */,
+				2A00000000000000000000E5 /* Info.plist */,
+				2A00000000000000000000E7 /* Lekhi.entitlements */,
+			);
+			path = Lekhi;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000A3 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000A2 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000A4 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000A7 /* MainTabView.swift */,
+				2A00000000000000000000A3 /* HomeView.swift */,
+				2A00000000000000000000A4 /* SettingsView.swift */,
+				2A00000000000000000000A5 /* AboutView.swift */,
+				2A00000000000000000000A6 /* TestTextFieldView.swift */,
+				2A00000000000000000000A8 /* KeyboardPreviewScreen.swift */,
+				2A00000000000000000000A9 /* CheatSheetView.swift */,
+				2A00000000000000000000AA /* TypingSpeedGameView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000A5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000D1 /* dictionary.json */,
+				2A00000000000000000000D2 /* autocorrect.json */,
+				2A00000000000000000000D3 /* suffix.json */,
+				2A00000000000000000000D4 /* probhat.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000B1 /* LekhiKeyboard */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000B0 /* KeyboardViewController.swift */,
+				5G00000000000000000000B2 /* Keyboard */,
+				5G00000000000000000000B3 /* Input */,
+				2A00000000000000000000E8 /* Info.plist */,
+				2A00000000000000000000E4 /* LekhiKeyboard.entitlements */,
+			);
+			path = LekhiKeyboard;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000B2 /* Keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000B2 /* KeyboardRootView.swift */,
+				2A00000000000000000000B3 /* KeyboardLayout.swift */,
+				2A00000000000000000000B4 /* KeyboardKey.swift */,
+				2A00000000000000000000B5 /* KeyAction.swift */,
+				2A00000000000000000000B6 /* KeyKind.swift */,
+				2A00000000000000000000B7 /* SuggestionBarView.swift */,
+				2A00000000000000000000B8 /* Theme.swift */,
+				2A00000000000000000000BC /* EmojiPickerView.swift */,
+			);
+			path = Keyboard;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000B3 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000B9 /* InputSession.swift */,
+				2A00000000000000000000BA /* KeyRouter.swift */,
+				2A00000000000000000000BB /* BengaliDigitInput.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000C0 /* SharedKit */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000C0 /* AppGroup.swift */,
+				2A00000000000000000000C1 /* DataPaths.swift */,
+				2A00000000000000000000C2 /* Layout.swift */,
+				2A00000000000000000000C3 /* TypingMode.swift */,
+				2A00000000000000000000C4 /* Suggestion.swift */,
+				2A00000000000000000000C7 /* BengaliDigitStore.swift */,
+				2A00000000000000000000C8 /* HapticManager.swift */,
+				2A00000000000000000000C9 /* MechanicalSoundManager.swift */,
+				2A00000000000000000000CA /* KeyboardTheme.swift */,
+				2A00000000000000000000CB /* SpacebarSwipeStore.swift */,
+				2A00000000000000000000CC /* EmojiData.swift */,
+				2A00000000000000000000CD /* EnglishSuggestionService.swift */,
+				5G00000000000000000000C1 /* Transliteration */,
+			);
+			path = SharedKit;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000C1 /* Transliteration */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000C5 /* LekhiEngine.swift */,
+				2A00000000000000000000C6 /* RitiEngine.swift */,
+			);
+			path = Transliteration;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000D0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000E2 /* RitiFFI.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		5G00000000000000000000E0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000E6 /* Lekhi.app */,
+				2A00000000000000000000E1 /* LekhiKeyboard.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6T00000000000000000000A1 /* Lekhi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C00000000000000000000A1 /* Build configuration list for PBXNativeTarget "Lekhi" */;
+			buildPhases = (
+				8P00000000000000000000A1 /* Sources */,
+				4F00000000000000000000A1 /* Frameworks */,
+				8R00000000000000000000A1 /* Resources */,
+				3C00000000000000000000E1 /* Embed Frameworks */,
+				3C00000000000000000000E0 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9D00000000000000000000B1 /* PBXTargetDependency */,
+			);
+			name = Lekhi;
+			productName = Lekhi;
+			productReference = 2A00000000000000000000E6 /* Lekhi.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6T00000000000000000000B1 /* LekhiKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C00000000000000000000B1 /* Build configuration list for PBXNativeTarget "LekhiKeyboard" */;
+			buildPhases = (
+				8P00000000000000000000B1 /* Sources */,
+				4F00000000000000000000B1 /* Frameworks */,
+				8R00000000000000000000B1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LekhiKeyboard;
+			productName = LekhiKeyboard;
+			productReference = 2A00000000000000000000E1 /* LekhiKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7P00000000000000000000A1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					6T00000000000000000000A1 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					6T00000000000000000000B1 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 7C00000000000000000000P1 /* Build configuration list for PBXProject "Lekhi" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 5G00000000000000000000A1;
+			productRefGroup = 5G00000000000000000000E0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6T00000000000000000000A1 /* Lekhi */,
+				6T00000000000000000000B1 /* LekhiKeyboard */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8R00000000000000000000A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C4740F7303DEED90022E80F /* dictionary.json in Resources */,
+				7C4740F8303DEED90022E80F /* autocorrect.json in Resources */,
+				7C4740F9303DEED90022E80F /* suffix.json in Resources */,
+				7C4740FA303DEED90022E80F /* probhat.json in Resources */,
+				1A00000000000000000000D5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8R00000000000000000000B1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000000000000000000D1 /* dictionary.json in Resources */,
+				1A00000000000000000000D2 /* autocorrect.json in Resources */,
+				1A00000000000000000000D3 /* suffix.json in Resources */,
+				1A00000000000000000000D4 /* probhat.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8P00000000000000000000A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000000000000000000A1 /* LekhiApp.swift in Sources */,
+				1A00000000000000000000A2 /* OnboardingView.swift in Sources */,
+				1A00000000000000000000A3 /* HomeView.swift in Sources */,
+				1A00000000000000000000A4 /* SettingsView.swift in Sources */,
+				1A00000000000000000000A5 /* AboutView.swift in Sources */,
+				1A00000000000000000000A6 /* TestTextFieldView.swift in Sources */,
+				1A00000000000000000000A7 /* MainTabView.swift in Sources */,
+				1A00000000000000000000A8 /* KeyboardPreviewScreen.swift in Sources */,
+				1A00000000000000000000A9 /* CheatSheetView.swift in Sources */,
+				1A00000000000000000000AA /* TypingSpeedGameView.swift in Sources */,
+				1A00000000000000000000B2 /* KeyboardRootView.swift in Sources */,
+				1A00000000000000000000B3 /* KeyboardLayout.swift in Sources */,
+				1A00000000000000000000B4 /* KeyboardKey.swift in Sources */,
+				1A00000000000000000000B5 /* KeyAction.swift in Sources */,
+				1A00000000000000000000B6 /* KeyKind.swift in Sources */,
+				1A00000000000000000000B7 /* SuggestionBarView.swift in Sources */,
+				1A00000000000000000000B8 /* Theme.swift in Sources */,
+				1A00000000000000000000B9 /* InputSession.swift in Sources */,
+				1A00000000000000000000BA /* KeyRouter.swift in Sources */,
+				1A00000000000000000000BB /* BengaliDigitInput.swift in Sources */,
+				1A00000000000000000000C0 /* AppGroup.swift in Sources */,
+				1A00000000000000000000C1 /* DataPaths.swift in Sources */,
+				1A00000000000000000000C2 /* Layout.swift in Sources */,
+				1A00000000000000000000C3 /* TypingMode.swift in Sources */,
+				1A00000000000000000000C4 /* Suggestion.swift in Sources */,
+				1A00000000000000000000C5 /* LekhiEngine.swift in Sources */,
+				1A00000000000000000000C6 /* RitiEngine.swift in Sources */,
+				1A00000000000000000000C7 /* BengaliDigitStore.swift in Sources */,
+				1A00000000000000000000C8 /* HapticManager.swift in Sources */,
+				1A00000000000000000000C9 /* MechanicalSoundManager.swift in Sources */,
+				1A00000000000000000000CA /* KeyboardTheme.swift in Sources */,
+				1A00000000000000000000BC /* EmojiPickerView.swift in Sources */,
+				1A00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */,
+				1A00000000000000000000CC /* EmojiData.swift in Sources */,
+				1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8P00000000000000000000B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A00000000000000000000B0 /* KeyboardViewController.swift in Sources */,
+				1B00000000000000000000B2 /* KeyboardRootView.swift in Sources */,
+				1B00000000000000000000B3 /* KeyboardLayout.swift in Sources */,
+				1B00000000000000000000B4 /* KeyboardKey.swift in Sources */,
+				1B00000000000000000000B5 /* KeyAction.swift in Sources */,
+				1B00000000000000000000B6 /* KeyKind.swift in Sources */,
+				1B00000000000000000000B7 /* SuggestionBarView.swift in Sources */,
+				1B00000000000000000000B8 /* Theme.swift in Sources */,
+				1B00000000000000000000B9 /* InputSession.swift in Sources */,
+				1B00000000000000000000BA /* KeyRouter.swift in Sources */,
+				1B00000000000000000000BB /* BengaliDigitInput.swift in Sources */,
+				1B00000000000000000000BC /* EmojiPickerView.swift in Sources */,
+				1B00000000000000000000C0 /* AppGroup.swift in Sources */,
+				1B00000000000000000000C1 /* DataPaths.swift in Sources */,
+				1B00000000000000000000C2 /* Layout.swift in Sources */,
+				1B00000000000000000000C3 /* TypingMode.swift in Sources */,
+				1B00000000000000000000C4 /* Suggestion.swift in Sources */,
+				1B00000000000000000000C5 /* LekhiEngine.swift in Sources */,
+				1B00000000000000000000C6 /* RitiEngine.swift in Sources */,
+				1B00000000000000000000C7 /* BengaliDigitStore.swift in Sources */,
+				1B00000000000000000000C8 /* HapticManager.swift in Sources */,
+				1B00000000000000000000C9 /* MechanicalSoundManager.swift in Sources */,
+				1B00000000000000000000CA /* KeyboardTheme.swift in Sources */,
+				1B00000000000000000000CB /* SpacebarSwipeStore.swift in Sources */,
+				1B00000000000000000000CC /* EmojiData.swift in Sources */,
+				1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9D00000000000000000000B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6T00000000000000000000B1 /* LekhiKeyboard */;
+			targetProxy = 9T00000000000000000000B1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		7B00000000000000000000A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		7B00000000000000000000A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		7B00000000000000000000B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Lekhi/Lekhi.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TZX5LG7ZW5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Lekhi/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		7B00000000000000000000B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Lekhi/Lekhi.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TZX5LG7ZW5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Lekhi/Info.plist;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		7B00000000000000000000B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LekhiKeyboard/LekhiKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TZX5LG7ZW5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LekhiKeyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lekhi Keyboard";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7B00000000000000000000B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LekhiKeyboard/LekhiKeyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TZX5LG7ZW5;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LekhiKeyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Lekhi Keyboard";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lekhi.ios.app.keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7C00000000000000000000A1 /* Build configuration list for PBXNativeTarget "Lekhi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B00000000000000000000B3 /* Debug */,
+				7B00000000000000000000B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C00000000000000000000B1 /* Build configuration list for PBXNativeTarget "LekhiKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B00000000000000000000B5 /* Debug */,
+				7B00000000000000000000B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C00000000000000000000P1 /* Build configuration list for PBXProject "Lekhi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B00000000000000000000A1 /* Debug */,
+				7B00000000000000000000A2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7P00000000000000000000A1 /* Project object */;
+}

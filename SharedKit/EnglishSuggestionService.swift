@@ -1,0 +1,91 @@
+//
+//  EnglishSuggestionService.swift
+//  SharedKit
+//
+//  Provides autocomplete, word completion, and spelling suggestions
+//  for English keyboard input using UIKit's UITextChecker.
+//
+
+import UIKit
+
+public enum EnglishSuggestionService {
+
+    private static let checker = UITextChecker()
+
+    /// Generate up to 3 English word candidates for a given typed buffer.
+    public static func suggestions(for rawBuffer: String) -> [String] {
+        let buffer = rawBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !buffer.isEmpty else { return [] }
+
+        let nsBuffer = buffer as NSString
+        let range = NSRange(location: 0, length: nsBuffer.length)
+
+        var results: [String] = []
+
+        // 1. Exact typed input is always a candidate option
+        results.append(buffer)
+
+        // 2. Fetch completions for partial word range
+        if let completions = checker.completions(forPartialWordRange: range, in: buffer, language: "en_US") {
+            for word in completions {
+                let match = matchCasing(source: buffer, target: word)
+                if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
+                    results.append(match)
+                    if results.count >= 3 { break }
+                }
+            }
+        }
+
+        // 3. If we still need more candidates, fetch spelling guesses
+        if results.count < 3 {
+            if let guesses = checker.guesses(forWordRange: range, in: buffer, language: "en_US") {
+                for word in guesses {
+                    let match = matchCasing(source: buffer, target: word)
+                    if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
+                        results.append(match)
+                        if results.count >= 3 { break }
+                    }
+                }
+            }
+        }
+
+        // 4. Common words fallback if offline or no completions
+        if results.count < 3 {
+            for word in commonEnglishWords where word.lowercased().hasPrefix(buffer.lowercased()) {
+                let match = matchCasing(source: buffer, target: word)
+                if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
+                    results.append(match)
+                    if results.count >= 3 { break }
+                }
+            }
+        }
+
+        return Array(results.prefix(3))
+    }
+
+    private static func matchCasing(source: String, target: String) -> String {
+        guard let first = source.first else { return target }
+        if source.allSatisfy({ $0.isUppercase }) && source.count > 1 {
+            return target.uppercased()
+        } else if first.isUppercase {
+            return target.prefix(1).uppercased() + target.dropFirst().lowercased()
+        }
+        return target.lowercased()
+    }
+
+    private static let commonEnglishWords: [String] = [
+        "the", "be", "to", "of", "and", "a", "in", "that", "have", "I",
+        "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+        "this", "but", "his", "by", "from", "they", "we", "say", "her", "she",
+        "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+        "so", "up", "out", "if", "about", "who", "get", "which", "go", "me",
+        "when", "make", "can", "like", "time", "no", "just", "him", "know", "take",
+        "people", "into", "year", "your", "good", "some", "could", "them", "see", "other",
+        "than", "then", "now", "look", "only", "come", "its", "over", "think", "also",
+        "back", "after", "use", "two", "how", "our", "work", "first", "well", "way",
+        "even", "new", "want", "because", "any", "these", "give", "day", "most", "us",
+        "love", "happy", "thank", "thanks", "please", "great", "awesome", "hello", "hi", "good",
+        "night", "morning", "today", "tomorrow", "tonight", "friend", "family", "bangla", "bangladesh",
+        "dhaka", "beautiful", "really", "very", "much", "more", "help", "need", "feel", "look"
+    ]
+}

@@ -1,0 +1,34 @@
+# Xcode build artifacts
+build/
+DerivedData/
+
+# Generated XCFrameworks
+RitiFFI.xcframework/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+
+# Temporary / scratch files
+*.tmp
+*.bak
+
+# Local logs
+*.log
+
+# CocoaPods (unused, but ignored just in case)
+Pods/
+
+# Carthage (unused)
+Carthage/Build/
