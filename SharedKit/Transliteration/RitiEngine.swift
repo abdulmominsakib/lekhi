@@ -2,278 +2,326 @@
 //  RitiEngine.swift
 //  SharedKit
 //
-//  Swift wrapper around the `avrobangla_engine` Rust static library
-//  (OpenBangla's `riti` transliteration engine). Mirrors the
-//  lifecycle used by the macOS Lekho InputController.
+//  Safe, dual-context Swift wrapper around the OpenBangla/riti engine used
+//  by Lekho. Runs a shadow phonetic context in lockstep when in phonetic-first
+//  mode so the literal transliteration is accurately matched without corrupting
+//  dictionary candidate ranking.
 //
 
 import Foundation
 import RitiFFI
 
-/// Riti-backed transliteration engine.
-///
-/// Behaviour by mode:
-/// * `.smart`         — single context with `phoneticSuggestion = true`.
-/// * `.phoneticFirst` — primary context plus a phonetic-only shadow
-///                       context whose lonely output is used to pick
-///                       the default candidate.
-/// * `.phoneticOnly`  — single context with `phoneticSuggestion = false`;
-///                       results are committed inline as soon as they
-///                       arrive.
 public final class RitiEngine: LekhiEngine {
 
-    // MARK: - Stored state
+    private var context: OpaquePointer?
+    private var config: OpaquePointer?
 
-    private var primaryCtx: OpaquePointer?
-    private var primaryCfg: OpaquePointer?
-    private var shadowCtx: OpaquePointer?
-    private var shadowCfg: OpaquePointer?
+    /// Shadow context running phonetic-only, used in `.phoneticFirst` to obtain the
+    /// raw transliteration of the current buffer so it can be default-selected in
+    /// the main suggestion list (mirroring Lekho). Nil in other modes.
+    private var phoneticContext: OpaquePointer?
+    private var phoneticConfig: OpaquePointer?
+
+    /// Raw phonetic transliteration of the current buffer (from `phoneticContext`).
     private var currentPhonetic: String?
 
-    private let layout: Layout
+    /// Maps each visible keyboard candidate back to riti's source index.
+    private var visibleCandidateIndices: [Int] = []
+    private var sourceCandidateCount = 0
+
     private let mode: TypingMode
 
-    // MARK: - Init / teardown
-
     public init?(layout: Layout, mode: TypingMode) {
-        self.layout = layout
         self.mode = mode
 
-        // Copy the data files into the App Group on first launch.
+        // The extension can read its bundled resources directly. Copying them
+        // into the App Group is best-effort and must never block initialization.
         try? DataPaths.ensureDataFilesCopied()
 
         let databaseDir: String = {
-            if let dir = DataPaths.sharedDataDir?.path, FileManager.default.fileExists(atPath: dir) {
-                return dir
+            if let shared = DataPaths.sharedDataDir?.path,
+               FileManager.default.fileExists(atPath: shared) {
+                return shared
             }
-            if let bundleResource = Bundle.main.resourcePath {
-                return bundleResource
-            }
-            return NSTemporaryDirectory()
+            return Bundle.main.resourcePath ?? NSTemporaryDirectory()
         }()
 
         let userDir: String = {
-            if let userPath = AppGroup.containerURL?.appendingPathComponent("RitiUser").path {
-                return userPath
+            if let shared = AppGroup.containerURL?.appendingPathComponent("RitiUser").path {
+                return shared
             }
-            return NSTemporaryDirectory() + "/RitiUser"
+            return NSTemporaryDirectory() + "/LekhiRitiUser"
         }()
 
-        // Make sure the user directory exists; riti writes its
-        // remembered-selection cache there.
         try? FileManager.default.createDirectory(
             atPath: userDir,
             withIntermediateDirectories: true
         )
 
-        guard
-            let primary = Self.makeContext(
-                layout: layout,
-                databaseDir: databaseDir,
-                userDir: userDir,
-                phoneticSuggestion: mode != .phoneticOnly
-            )
-        else {
+        guard let handle = Self.makeContext(
+            layout: layout,
+            databaseDir: databaseDir,
+            userDir: userDir,
+            phoneticSuggestion: mode != .phoneticOnly
+        ) else {
             return nil
         }
-        self.primaryCfg = primary.config
-        self.primaryCtx = primary.context
 
-        // Phonetic-first runs a second context to get the literal
-        // phonetic output for default-selection logic.
-        if mode == .phoneticFirst,
-           let shadow = Self.makeContext(
+        config = handle.config
+        context = handle.context
+
+        if mode == .phoneticFirst {
+            if let shadowHandle = Self.makeContext(
                 layout: layout,
                 databaseDir: databaseDir,
                 userDir: userDir,
                 phoneticSuggestion: false
-           )
-        {
-            self.shadowCfg = shadow.config
-            self.shadowCtx = shadow.context
+            ) {
+                phoneticConfig = shadowHandle.config
+                phoneticContext = shadowHandle.context
+            }
         }
     }
 
-    deinit { teardown() }
-
-    public func teardown() {
-        if let ctx = primaryCtx   { riti_context_free(ctx);  primaryCtx = nil }
-        if let cfg = primaryCfg   { riti_config_free(cfg);   primaryCfg = nil }
-        if let ctx = shadowCtx    { riti_context_free(ctx);  shadowCtx = nil }
-        if let cfg = shadowCfg    { riti_config_free(cfg);   shadowCfg = nil }
+    deinit {
+        teardown()
     }
 
-    // MARK: - LekhiEngine
-
     public var hasActiveSession: Bool {
-        guard let ctx = primaryCtx else { return false }
-        return riti_context_ongoing_input_session(ctx)
+        guard let context else { return false }
+        return riti_context_ongoing_input_session(context)
     }
 
     public func handleKey(_ character: Character) -> Suggestion {
-        guard let ctx = primaryCtx else { return .empty }
-
-        // Map the Swift Character to the riti virtual keycode.
-        guard
-            let scalar = character.unicodeScalars.first,
-            scalar.value < 0x80
-        else {
+        guard let context,
+              let scalar = character.unicodeScalars.first,
+              scalar.value < 0x80 else {
             return .empty
         }
 
         let keycode = avro_keycode_for_char(scalar.value)
-        guard keycode != 0 else { return .empty }
-
-        let selection = UInt8(0)
-        guard let raw = riti_get_suggestion_for_key(ctx, keycode, 0, selection) else {
+        guard keycode != 0,
+              let raw = riti_get_suggestion_for_key(context, keycode, 0, 0) else {
             return .empty
         }
         defer { riti_suggestion_free(raw) }
 
-        if let shadow = shadowCtx,
-           let shadowRaw = riti_get_suggestion_for_key(shadow, keycode, 0, 0) {
-            currentPhonetic = extractLonely(shadowRaw)
-            riti_suggestion_free(shadowRaw)
-        }
+        feedPhoneticShadow(keycode: keycode)
 
-        return assemble(raw: raw, fallback: nil)
+        return suggestion(from: raw)
     }
 
     public func backspace(word: Bool) -> Suggestion {
-        guard let ctx = primaryCtx else { return .empty }
-        guard let raw = riti_context_backspace_event(ctx, word) else {
+        guard let context,
+              let raw = riti_context_backspace_event(context, word) else {
             return .empty
         }
         defer { riti_suggestion_free(raw) }
 
-        if let shadow = shadowCtx,
-           let shadowRaw = riti_context_backspace_event(shadow, word) {
-            currentPhonetic = extractLonely(shadowRaw)
-            riti_suggestion_free(shadowRaw)
-        }
+        backspacePhoneticShadow(word: word)
 
-        return assemble(raw: raw, fallback: nil)
+        return suggestion(from: raw)
     }
 
     public func commitCandidate(at index: Int) -> Suggestion {
-        guard let ctx = primaryCtx else { return .empty }
-        if riti_context_ongoing_input_session(ctx) {
-            riti_context_candidate_committed(ctx, UInt(index))
+        defer { finishSession() }
+
+        guard let context,
+              riti_context_ongoing_input_session(context),
+              visibleCandidateIndices.indices.contains(index) else {
+            return .empty
         }
-        finishSession()
+
+        let sourceIndex = visibleCandidateIndices[index]
+        guard sourceIndex >= 0, sourceIndex < sourceCandidateCount else {
+            return .empty
+        }
+
+        // riti indexes directly into its last suggestion here. Passing a stale
+        // or UI-truncated index would panic across the FFI boundary.
+        riti_context_candidate_committed(context, UInt(sourceIndex))
         return .empty
     }
 
     public func finishSession() {
-        if let ctx = primaryCtx, riti_context_ongoing_input_session(ctx) {
-            riti_context_finish_input_session(ctx)
+        if let context, riti_context_ongoing_input_session(context) {
+            riti_context_finish_input_session(context)
         }
-        if let shadow = shadowCtx, riti_context_ongoing_input_session(shadow) {
-            riti_context_finish_input_session(shadow)
+        finishPhoneticShadow()
+        clearCandidateState()
+    }
+
+    public func teardown() {
+        finishSession()
+        if let context {
+            riti_context_free(context)
+            self.context = nil
+        }
+        if let config {
+            riti_config_free(config)
+            self.config = nil
+        }
+        if let phoneticContext {
+            riti_context_free(phoneticContext)
+            self.phoneticContext = nil
+        }
+        if let phoneticConfig {
+            riti_config_free(phoneticConfig)
+            self.phoneticConfig = nil
+        }
+    }
+
+    // MARK: - Phonetic shadow context (.phoneticFirst)
+
+    private func feedPhoneticShadow(keycode: UInt16) {
+        guard let phoneticContext else { return }
+        let raw = riti_get_suggestion_for_key(phoneticContext, keycode, 0, 0)
+        currentPhonetic = lonelyText(of: raw)
+        if let raw { riti_suggestion_free(raw) }
+    }
+
+    private func backspacePhoneticShadow(word: Bool) {
+        guard let phoneticContext else { return }
+        let raw = riti_context_backspace_event(phoneticContext, word)
+        currentPhonetic = lonelyText(of: raw)
+        if let raw { riti_suggestion_free(raw) }
+    }
+
+    private func finishPhoneticShadow() {
+        if let phoneticContext, riti_context_ongoing_input_session(phoneticContext) {
+            riti_context_finish_input_session(phoneticContext)
         }
         currentPhonetic = nil
     }
 
-    // MARK: - Suggestion assembly
-
-    private func extractLonely(_ raw: OpaquePointer) -> String? {
-        guard !riti_suggestion_is_empty(raw),
+    private func lonelyText(of raw: OpaquePointer?) -> String? {
+        guard let raw,
+              !riti_suggestion_is_empty(raw),
               riti_suggestion_is_lonely(raw),
-              let ptr = riti_suggestion_get_lonely_suggestion(raw) else {
+              let pointer = riti_suggestion_get_lonely_suggestion(raw) else {
             return nil
         }
-        defer { riti_string_free(ptr) }
-        return String(cString: ptr)
+        defer { riti_string_free(pointer) }
+        return String(cString: pointer)
     }
 
-    private func assemble(
-        raw: OpaquePointer,
-        fallback: Suggestion?
-    ) -> Suggestion {
-        let isLonely = riti_suggestion_is_lonely(raw)
+    // MARK: - Suggestion extraction
 
-        // Lonely / single suggestion is the phonetic inline commit.
-        if isLonely {
-            if let lonely = riti_suggestion_get_lonely_suggestion(raw) {
-                defer { riti_string_free(lonely) }
-                let text = String(cString: lonely)
-                return Suggestion(
-                    candidates: text.isEmpty ? [] : [text],
-                    preEditText: text,
-                    defaultIndex: 0,
-                    isLonely: true
-                )
+    private func suggestion(from raw: OpaquePointer) -> Suggestion {
+        if riti_suggestion_is_empty(raw) {
+            clearCandidateState()
+            return .empty
+        }
+
+        // Suggestion::Single is a distinct Rust enum variant. Calling list-only
+        // accessors such as get_length on it panics, so this branch comes first.
+        if riti_suggestion_is_lonely(raw) {
+            clearCandidateState()
+            guard let pointer = riti_suggestion_get_lonely_suggestion(raw) else {
+                return .empty
             }
+            defer { riti_string_free(pointer) }
+            let text = String(cString: pointer)
             return Suggestion(
-                candidates: [],
-                preEditText: "",
+                candidates: text.isEmpty ? [] : [text],
+                preEditText: text,
                 defaultIndex: 0,
                 isLonely: true
             )
         }
 
         let count = Int(riti_suggestion_get_length(raw))
-        var candidates: [String] = []
-        candidates.reserveCapacity(count)
-        for i in 0..<count {
-            if let c = riti_suggestion_get_suggestion(raw, UInt(i)) {
-                defer { riti_string_free(c) }
-                candidates.append(String(cString: c))
-            }
+        guard count > 0 else {
+            clearCandidateState()
+            return .empty
         }
 
-        let defaultIdx = defaultIndexIn(raw: raw, candidates: candidates)
+        var allCandidates: [String] = []
+        allCandidates.reserveCapacity(count)
+        for index in 0..<count {
+            guard let pointer = riti_suggestion_get_suggestion(raw, UInt(index)) else {
+                clearCandidateState()
+                return .empty
+            }
+            allCandidates.append(String(cString: pointer))
+            riti_string_free(pointer)
+        }
 
-        let preEdit: String = {
-            if !candidates.isEmpty {
-                let safeIdx = UInt(min(defaultIdx, candidates.count - 1))
-                if let p = riti_suggestion_get_pre_edit_text(raw, safeIdx) {
-                    defer { riti_string_free(p) }
-                    return String(cString: p)
-                }
-                if candidates.indices.contains(defaultIdx) {
-                    return candidates[defaultIdx]
-                }
-                return candidates.first ?? ""
-            }
-            if let p = riti_suggestion_get_pre_edit_text(raw, 0) {
-                defer { riti_string_free(p) }
-                return String(cString: p)
-            }
-            return ""
-        }()
+        guard !allCandidates.isEmpty else {
+            clearCandidateState()
+            return .empty
+        }
+
+        sourceCandidateCount = allCandidates.count
+        let sourceDefaultIndex = defaultIndex(in: raw, candidates: allCandidates)
+        visibleCandidateIndices = visibleIndices(
+            candidateCount: allCandidates.count,
+            requiredIndex: sourceDefaultIndex
+        )
+
+        let visibleCandidates = visibleCandidateIndices.map { allCandidates[$0] }
+        let visibleDefaultIndex = visibleCandidateIndices.firstIndex(of: sourceDefaultIndex) ?? 0
+        let preEdit = preEditText(
+            from: raw,
+            sourceIndex: sourceDefaultIndex,
+            fallback: allCandidates[sourceDefaultIndex]
+        )
 
         return Suggestion(
-            candidates: candidates,
+            candidates: visibleCandidates,
             preEditText: preEdit,
-            defaultIndex: defaultIdx,
+            defaultIndex: visibleDefaultIndex,
             isLonely: false
         )
     }
 
-    /// Determine which candidate should be highlighted by default.
-    /// In `.phoneticFirst` we look up the shadow context's lonely
-    /// output in the candidate list and prefer that index. In other
-    /// modes we fall back to the index that riti remembers from
-    /// previous selections, defaulting to 0.
-    private func defaultIndexIn(
-        raw: OpaquePointer,
-        candidates: [String]
-    ) -> Int {
+    private func defaultIndex(in raw: OpaquePointer, candidates: [String]) -> Int {
+        let remembered = Int(riti_suggestion_previously_selected_index(raw))
+        if candidates.indices.contains(remembered) {
+            return remembered
+        }
+
         if mode == .phoneticFirst, let phonetic = currentPhonetic {
-            if let idx = candidates.firstIndex(of: phonetic) {
-                return idx
+            if let index = candidates.firstIndex(of: phonetic) {
+                return index
             }
         }
 
-        let remembered = Int(riti_suggestion_previously_selected_index(raw))
-        if remembered >= 0 && remembered < candidates.count {
-            return remembered
-        }
         return 0
     }
 
-    // MARK: - Config helpers
+    private func visibleIndices(candidateCount: Int, requiredIndex: Int) -> [Int] {
+        var indices = Array(0..<min(3, candidateCount))
+        if !indices.contains(requiredIndex) {
+            if indices.count == 3 {
+                indices[2] = requiredIndex
+            } else {
+                indices.append(requiredIndex)
+            }
+        }
+        return indices
+    }
+
+    private func preEditText(
+        from raw: OpaquePointer,
+        sourceIndex: Int,
+        fallback: String
+    ) -> String {
+        guard sourceIndex >= 0,
+              sourceIndex < sourceCandidateCount,
+              let pointer = riti_suggestion_get_pre_edit_text(raw, UInt(sourceIndex)) else {
+            return fallback
+        }
+        defer { riti_string_free(pointer) }
+        return String(cString: pointer)
+    }
+
+    private func clearCandidateState() {
+        visibleCandidateIndices = []
+        sourceCandidateCount = 0
+    }
+
+    // MARK: - Context construction
 
     private struct EngineHandle {
         let config: OpaquePointer
@@ -286,25 +334,28 @@ public final class RitiEngine: LekhiEngine {
         userDir: String,
         phoneticSuggestion: Bool
     ) -> EngineHandle? {
-        guard let cfg = riti_config_new() else { return nil }
+        guard let config = riti_config_new() else { return nil }
 
-        guard riti_config_set_layout_file(cfg, layout.ritiLayoutName) else {
-            riti_config_free(cfg)
+        guard riti_config_set_layout_file(config, layout.ritiLayoutName) else {
+            riti_config_free(config)
             return nil
         }
 
-        // riti expects the database directory to contain the
-        // dictionary / autocorrect / suffix files.
-        riti_config_set_database_dir(cfg, databaseDir)
-        riti_config_set_user_dir(cfg, userDir)
-        riti_config_set_phonetic_suggestion(cfg, phoneticSuggestion)
-        riti_config_set_suggestion_include_english(cfg, true)
-
-        guard let ctx = riti_context_new_with_config(cfg) else {
-            riti_config_free(cfg)
+        guard riti_config_set_database_dir(config, databaseDir),
+              riti_config_set_user_dir(config, userDir) else {
+            riti_config_free(config)
             return nil
         }
 
-        return EngineHandle(config: cfg, context: ctx)
+        riti_config_set_phonetic_suggestion(config, phoneticSuggestion)
+        riti_config_set_suggestion_include_english(config, true)
+
+        guard let context = riti_context_new_with_config(config) else {
+            riti_config_free(config)
+            return nil
+        }
+
+        return EngineHandle(config: config, context: context)
     }
 }
+

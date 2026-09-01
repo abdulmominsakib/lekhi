@@ -68,7 +68,7 @@ public enum KeyboardHeightOption: String, CaseIterable, Identifiable, Sendable {
 
     /// Row spacing between key rows.
     public var rowSpacing: CGFloat {
-        round(7.0 * max(0.90, scaleFactor * 0.95) * 2) / 2
+        round(6.0 * max(0.90, scaleFactor * 0.95) * 2) / 2
     }
 
     /// Total height for the UIInputViewController extension in portrait mode.

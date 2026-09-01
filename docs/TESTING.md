@@ -105,7 +105,7 @@ ls -t ~/Library/Logs/DiagnosticReports/ | grep -i lekho | head -5
 
 ```bash
 ls build/LekhoiOS.app/PlugIns/LekhoKeyboard.appex/
-ls build/LekhoiOS.app/Frameworks/    # should contain RitiFFI.framework
+find build/LekhoiOS.app -name 'RitiFFI.framework' # should print nothing; it is linked statically
 ```
 
 ## Reverting to a clean state

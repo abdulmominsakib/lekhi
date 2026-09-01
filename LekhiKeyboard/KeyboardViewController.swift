@@ -67,13 +67,17 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        let newLayout = LayoutStore.current()
+        let newMode = TypingModeStore.current()
         session.theme = ThemeStore.current()
         session.heightOption = KeyboardHeightStore.current()
         session.showCharacterPreview = CharacterPreviewStore.current()
         updateBackgroundTheme()
         updateKeyboardHeightConstraint()
-        if session.layout != LayoutStore.current()
-            || session.mode != TypingModeStore.current() {
+        if session.layout != newLayout || session.mode != newMode {
+            commitActiveComposition()
+            session.layout = newLayout
+            session.mode = newMode
             rebuildEngine()
             router = KeyRouter(session: session, engine: engine)
             installKeyboardView()
@@ -88,11 +92,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if session.hasActiveSession {
-            engine?.finishSession()
-            session.clearSuggestions()
-            session.buffer = ""
-        }
+        commitActiveComposition()
     }
 
     override func viewDidLayoutSubviews() {
@@ -235,6 +235,7 @@ final class KeyboardViewController: UIInputViewController {
         }
 
         if newLayout != session.layout || newMode != session.mode {
+            commitActiveComposition()
             session.layout = newLayout
             session.mode = newMode
             rebuildEngine()
@@ -285,15 +286,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func handleSwipeLanguage(forward: Bool) {
-        if session.hasActiveSession {
-            let chosen = router.resolveCurrentCandidate()
-            if !chosen.isEmpty {
-                textDocumentProxy.insertText(chosen + " ")
-            }
-            engine?.finishSession()
-            session.clearSuggestions()
-            session.buffer = ""
-        }
+        commitActiveComposition()
         session.cycleLanguage(forward: forward)
         rebuildEngine()
         router = KeyRouter(session: session, engine: engine)
@@ -361,10 +354,56 @@ final class KeyboardViewController: UIInputViewController {
         HapticManager.shared.candidateSelected()
     }
 
+    /// Commit marked text before an engine/layout transition. This keeps the
+    /// document proxy and riti buffer in lockstep across host-app callbacks.
+    private func commitActiveComposition() {
+        guard session.hasActiveSession else {
+            engine?.finishSession()
+            session.buffer = ""
+            session.clearSuggestions()
+            return
+        }
+
+        // English input is inserted directly on every keypress; its candidate
+        // state is advisory only, so there is no marked text to commit here.
+        if session.layout == .english {
+            session.buffer = ""
+            session.clearSuggestions()
+            return
+        }
+
+        let chosen = router?.resolveCurrentCandidate() ?? session.preEditText
+        if let engine,
+           session.selectedIndex >= 0,
+           session.selectedIndex < session.candidates.count,
+           engine.hasActiveSession {
+            _ = engine.commitCandidate(at: session.selectedIndex)
+        } else {
+            engine?.finishSession()
+        }
+
+        if !chosen.isEmpty {
+            textDocumentProxy.insertText(chosen)
+        }
+        session.buffer = ""
+        session.clearSuggestions()
+    }
+
+    private func discardStaleCompositionState() {
+        engine?.finishSession()
+        session.buffer = ""
+        session.clearSuggestions()
+    }
+
     // MARK: - Text-document callbacks
 
     override func textWillChange(_ textInput: (any UITextInput)?) {
         super.textWillChange(textInput)
+        // Cursor moves, host-side edits, and field changes can invalidate marked
+        // text without telling the engine. Never carry that stale buffer forward.
+        if !isDispatching, session.hasActiveSession {
+            discardStaleCompositionState()
+        }
     }
 
     override func textDidChange(_ textInput: (any UITextInput)?) {

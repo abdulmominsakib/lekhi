@@ -72,12 +72,12 @@ macOS Lekho upstream verbatim:
 | Mode | Engine state | Suggestion bar |
 |------|--------------|----------------|
 | `.smart` | one primary context | shows top 3 ranked candidates |
-| `.phoneticFirst` | primary + phonetic-only shadow | shows top 3, phonetic pre-selected |
+| `.phoneticFirst` | one primary context | shows top 3, phonetic pre-selected |
 | `.phoneticOnly` | one phonetic-only context | none, commits inline |
 
-The shadow context in `.phoneticFirst` lets us pick the index
-whose output matches the literal phonetic transliteration —
-that's the candidate we highlight by default.
+In `.phoneticFirst`, the wrapper selects riti's literal phonetic
+candidate from its ranked output. This keeps the keyboard to one
+engine context while preserving Lekho's phonetic-first behaviour.
 
 ## App Group + data files
 
@@ -151,7 +151,7 @@ that's the candidate we highlight by default.
 │   └── Transliteration/
 │       ├── LekhoEngine.swift
 │       └── RitiEngine.swift
-├── RitiFFI.xcframework/    ← generated
+├── RitiFFI.xcframework/    ← generated static Rust library
 ├── RitiFFI-stub/           ← placeholder C implementation
 └── scripts/
     ├── build_xcframework.sh

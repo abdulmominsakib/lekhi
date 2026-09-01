@@ -65,6 +65,11 @@ public struct KeyboardKey: View {
 
             // 2. Key Face — slides down on press
             keyFaceView
+                .offset(
+                    x: descriptor.kind.isSpace
+                        ? max(-8, min(8, dragOffset * 0.08))
+                        : 0
+                )
                 .offset(y: isPressed ? Theme.pressedDepression : 0)
 
             // 3. Apple-style Elevated Character Preview Popup
@@ -77,6 +82,10 @@ public struct KeyboardKey: View {
         .frame(height: keyHeight)
         .zIndex(isPressed ? 999 : 1)
         .contentShape(RoundedRectangle(cornerRadius: Theme.keyCornerRadius, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { onPress() }
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
@@ -203,7 +212,7 @@ public struct KeyboardKey: View {
 
         switch descriptor.label {
         case "⇧":
-            Image(systemName: isShifted ? "arrow.up.circle.fill" : "arrow.up")
+            Image(systemName: isShifted ? "shift.fill" : "shift")
                 .font(.system(size: 17, weight: isShifted ? .bold : .semibold))
                 .foregroundStyle(fg)
 
@@ -249,15 +258,43 @@ public struct KeyboardKey: View {
                     .frame(width: 44, height: 3.5)
             }
 
-        case "😊":
+        case "emoji", "😊":
             Image(systemName: "face.smiling")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(fg)
 
-        default:
-            Text(descriptor.label)
-                .font(descriptor.kind.font)
+        case "globe":
+            Image(systemName: "globe")
+                .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(fg)
+
+        default:
+            ZStack(alignment: .topTrailing) {
+                Text(descriptor.label)
+                    .font(descriptor.kind.font)
+                    .foregroundStyle(fg)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if let hint = descriptor.bengaliHint, !hint.isEmpty {
+                    Text(hint)
+                        .font(.system(size: hint.count > 1 ? 7 : 8.5, weight: .semibold))
+                        .foregroundStyle(fg.opacity(0.48))
+                        .padding(.top, 4)
+                        .padding(.trailing, 5)
+                }
+            }
+        }
+    }
+
+    private var accessibilityLabel: String {
+        switch descriptor.label {
+        case "⇧": return isShifted ? "Shift on" : "Shift"
+        case "⌫": return "Delete"
+        case "↵", "return": return "Return"
+        case "space": return spacebarLabel.map { "Space, \($0)" } ?? "Space"
+        case "emoji", "😊": return "Emoji"
+        case "globe": return "Next keyboard"
+        default: return descriptor.label
         }
     }
 
@@ -278,4 +315,3 @@ public struct KeyboardKey: View {
         }
     }
 }
-

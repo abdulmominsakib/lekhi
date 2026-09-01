@@ -52,11 +52,37 @@ public enum KeyboardLayoutMode {
 
 public enum KeyboardLayoutFactory {
 
+    private static let avroHints: [Character: String] = [
+        "q": "ক", "w": "ও", "e": "এ", "r": "র", "t": "ত",
+        "y": "য়", "u": "উ", "i": "ই", "o": "ও", "p": "প",
+        "a": "আ", "s": "স", "d": "দ", "f": "ফ", "g": "গ",
+        "h": "হ", "j": "জ", "k": "ক", "l": "ল", "z": "য",
+        "x": "ক্স", "c": "চ", "v": "ভ", "b": "ব", "n": "ন", "m": "ম"
+    ]
+
+    private static let probhatHints: [Character: String] = [
+        "q": "দ", "w": "ূ", "e": "ী", "r": "র", "t": "ট",
+        "y": "এ", "u": "ু", "i": "ি", "o": "ো", "p": "প",
+        "a": "া", "s": "স", "d": "ড", "f": "ত", "g": "গ",
+        "h": "হ", "j": "জ", "k": "ক", "l": "ল", "z": "য়",
+        "x": "শ", "c": "চ", "v": "আ", "b": "ব", "n": "ন", "m": "ম"
+    ]
+
     /// Four rows: q-p / a-l / shift z-m backspace / 123 space return
-    public static func letters(isShifted: Bool) -> [KeyRow] {
-        let top    = letterRow(rowId: "letters-row-0", letters: "qwertyuiop", shifted: isShifted)
-        let middle = letterRow(rowId: "letters-row-1", letters: "asdfghjkl",  shifted: isShifted)
-        let bottom = shiftRow(rowId: "letters-row-2", shifted: isShifted)
+    public static func letters(isShifted: Bool, layout: Layout) -> [KeyRow] {
+        let top = letterRow(
+            rowId: "letters-row-0",
+            letters: "qwertyuiop",
+            shifted: isShifted,
+            layout: layout
+        )
+        let middle = letterRow(
+            rowId: "letters-row-1",
+            letters: "asdfghjkl",
+            shifted: isShifted,
+            layout: layout
+        )
+        let bottom = shiftRow(rowId: "letters-row-2", shifted: isShifted, layout: layout)
         let pads   = bottomRow(rowId: "letters-row-3", modeLabel: "123", modeAction: .switchLayout)
         
         return [top, middle, bottom, pads]
@@ -102,15 +128,34 @@ public enum KeyboardLayoutFactory {
 
     // MARK: - Helpers
 
-    private static func letterRow(rowId: String, letters: String, shifted: Bool) -> KeyRow {
+    private static func letterRow(
+        rowId: String,
+        letters: String,
+        shifted: Bool,
+        layout: Layout? = nil
+    ) -> KeyRow {
         let chars = shifted ? letters.uppercased() : letters
         let keys = chars.enumerated().map { i, ch in
-            KeyDescriptor(id: "\(rowId)-\(i)-\(ch)", label: String(ch), kind: .letter, action: .character(ch))
+            let hintKey = Character(String(ch).lowercased())
+            let hint: String? = {
+                switch layout {
+                case .some(.avroPhonetic): return avroHints[hintKey]
+                case .some(.probhat): return probhatHints[hintKey]
+                case .some(.english), .none: return nil
+                }
+            }()
+            return KeyDescriptor(
+                id: "\(rowId)-\(i)",
+                label: String(ch),
+                bengaliHint: hint,
+                kind: .letter,
+                action: .character(ch)
+            )
         }
         return KeyRow(id: rowId, keys: keys)
     }
 
-    private static func shiftRow(rowId: String, shifted: Bool) -> KeyRow {
+    private static func shiftRow(rowId: String, shifted: Bool, layout: Layout) -> KeyRow {
         let shift = KeyDescriptor(
             id: "\(rowId)-shift",
             label: "⇧",
@@ -125,23 +170,31 @@ public enum KeyboardLayoutFactory {
         )
         return KeyRow(
             id: rowId,
-            keys: [shift] + letterRow(rowId: "\(rowId)-letters", letters: "zxcvbnm", shifted: shifted).keys + [backspace]
+            keys: [shift] + letterRow(
+                rowId: "\(rowId)-letters",
+                letters: "zxcvbnm",
+                shifted: shifted,
+                layout: layout
+            ).keys + [backspace]
         )
     }
 
     private static func bottomRow(rowId: String, modeLabel: String, modeAction: KeyAction) -> KeyRow {
         KeyRow(id: rowId, keys: [
-            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.45),
-            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 6.75),
+            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.35),
+            KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 0.95),
+            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 0.95),
+            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 4.95),
             KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 1.8)
         ])
     }
 
     private static func numberBottomRow(rowId: String, modeLabel: String, modeAction: KeyAction) -> KeyRow {
         KeyRow(id: rowId, keys: [
-            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.45),
-            KeyDescriptor(id: "\(rowId)-emoji", label: "😊", kind: .emoji, action: .emoji, widthWeight: 1.45),
-            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 5.3),
+            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.35),
+            KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 0.95),
+            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 0.95),
+            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 4.95),
             KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 1.8)
         ])
     }

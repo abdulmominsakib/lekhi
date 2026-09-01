@@ -72,7 +72,11 @@ public final class InputSession {
         candidates = suggestion.topThree
         preEditText = suggestion.preEditText
         selectedIndex = candidates.isEmpty ? -1 : suggestion.defaultIndex
-        hasActiveSession = !suggestion.candidates.isEmpty && !suggestion.isLonely
+        // riti represents phonetic-only composition as Suggestion::Single even
+        // while its buffer is active. Keep that marked-text session alive until
+        // space/return instead of committing and resetting after every letter.
+        hasActiveSession = !suggestion.candidates.isEmpty
+            && (!suggestion.isLonely || mode == .phoneticOnly)
     }
 
     /// Clear the suggestion bar.

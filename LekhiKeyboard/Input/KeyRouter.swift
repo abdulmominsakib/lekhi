@@ -84,16 +84,19 @@ public final class KeyRouter {
                 session.buffer = ""
                 session.clearSuggestions()
             }
+            session.isShifted = false
             return .insert(String(c))
         }
 
         guard let engine else {
+            session.isShifted = false
             return .insert(String(c))
         }
 
         // Bengali digit substitution when no session is active.
         if !session.hasActiveSession,
            let bengali = BengaliDigitInput.bengaliDigit(for: c) {
+            session.isShifted = false
             return .insert(String(bengali))
         }
 
@@ -102,28 +105,44 @@ public final class KeyRouter {
             if session.hasActiveSession {
                 let chosen = resolveCurrentCandidate()
                 commitAndFinish()
+                session.isShifted = false
                 return .commitText(chosen + String(c))
             }
+            session.isShifted = false
             return .insert(String(c))
         }
 
         // Engine produces a suggestion for the key.
         let suggestion = engine.handleKey(c)
+        guard !suggestion.candidates.isEmpty else {
+            // Fail closed if riti rejects a key or its context becomes invalid.
+            // Leaving marked text active here would desynchronise the document
+            // proxy from the engine and could make the next boundary unsafe.
+            engine.finishSession()
+            session.buffer = ""
+            session.clearSuggestions()
+            session.isShifted = false
+            return .insert(String(c))
+        }
+
         session.buffer.append(c)
         session.apply(suggestion)
+        session.isShifted = false
 
-        // If lonely (punctuation / single character commit outside dictionary)
+        // Phonetic-only is returned by riti as a single suggestion while the
+        // word is still composing. Keep replacing marked text until a boundary.
+        if session.mode == .phoneticOnly, suggestion.isLonely {
+            let text = suggestion.top.isEmpty ? String(c) : suggestion.top
+            return .setMarkedText(text)
+        }
+
+        // Other lonely results are punctuation / immediately committed output.
         if suggestion.isLonely {
             let committed = suggestion.top.isEmpty ? String(c) : suggestion.top
             session.clearSuggestions()
             session.buffer = ""
             engine.finishSession()
             return .commitText(committed)
-        }
-
-        if session.mode == .phoneticOnly {
-            let text = suggestion.top.isEmpty ? String(c) : suggestion.top
-            return .setMarkedText(text)
         }
 
         let preEdit = suggestion.preEditText.isEmpty ? (suggestion.top.isEmpty ? String(c) : suggestion.top) : suggestion.preEditText
@@ -163,6 +182,12 @@ public final class KeyRouter {
                 session.buffer.removeLast()
             }
             session.apply(suggestion)
+
+            if session.mode == .phoneticOnly,
+               !suggestion.candidates.isEmpty,
+               engine.hasActiveSession {
+                session.hasActiveSession = true
+            }
 
             if suggestion.candidates.isEmpty || session.buffer.isEmpty || !engine.hasActiveSession {
                 session.buffer = ""

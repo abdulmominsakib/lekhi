@@ -3,8 +3,8 @@
 //  LekhiKeyboard
 //
 //  Top-level SwiftUI view for the keyboard. Hosts the
-//  candidate suggestion bar and the key grid.
-//  The system already draws globe + mic below us — no extra bar needed.
+//  candidate suggestion bar and the key grid, including the
+//  globe, emoji, space, and return controls in the bottom row.
 //
 
 import SwiftUI
@@ -94,7 +94,10 @@ private struct KeyboardGrid: View {
         let rows: [KeyRow] = {
             switch session.layoutMode {
             case .letters:
-                return KeyboardLayoutFactory.letters(isShifted: session.isShifted)
+                return KeyboardLayoutFactory.letters(
+                    isShifted: session.isShifted,
+                    layout: session.layout
+                )
             case .numbers:
                 return KeyboardLayoutFactory.numbers()
             case .symbols:

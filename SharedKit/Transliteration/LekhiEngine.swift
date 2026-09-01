@@ -37,18 +37,14 @@ public protocol LekhiEngine: AnyObject {
 public extension LekhiEngine {
 
     func backspace() -> Suggestion { backspace(word: false) }
-
-    func commitCandidate(at index: Int) -> Suggestion {
-        commitCandidate(at: index)
-    }
 }
 
 /// Factory for the default engine implementation.
 public enum LekhiEngineFactory {
 
-    /// Create a riti-backed engine. Returns `nil` if the bundle
-    /// resources are missing or the FFI cannot be initialised.
+    /// Create the OpenBangla/riti engine used by Lekho.
     public static func make(layout: Layout, mode: TypingMode) -> LekhiEngine? {
+        guard layout != .english else { return nil }
         return RitiEngine(layout: layout, mode: mode)
     }
 }

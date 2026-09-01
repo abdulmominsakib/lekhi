@@ -68,7 +68,7 @@
 │  ├─ SuggestionBarView (3-Card Candidate Selection)         │
 │  ├─ InputSession & MechanicalSoundManager / HapticManager   │
 │  ├─ RitiEngine (Swift FFI bridge)                           │
-│  └─ RitiFFI.xcframework (Rust Transliteration Engine)       │
+│  └─ RitiFFI.xcframework (statically linked Rust engine)     │
 │                                                             │
 │  App Group Shared Container (group.com.lekhi.ios)           │
 │  └─ dictionary.json • autocorrect.json • suffix.json        │

@@ -56,6 +56,11 @@ public struct SuggestionBarView: View {
         .frame(height: Theme.suggestionBarHeight)
         .frame(maxWidth: .infinity)
         .background(palette.candidateBarBackground)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(palette.candidateDivider.opacity(0.7))
+                .frame(height: 0.5)
+        }
     }
 
     @ViewBuilder
@@ -75,7 +80,6 @@ public struct SuggestionBarView: View {
 
         Button {
             guard hasItem else { return }
-            HapticManager.shared.candidateSelected()
             onTap(index)
         } label: {
             ZStack {
@@ -86,17 +90,29 @@ public struct SuggestionBarView: View {
                         .padding(.vertical, 4)
                 }
 
-                Text(displayText)
-                    .font(index == 0 && displayText.hasPrefix("“") ? Theme.rawCandidateFont : Theme.candidateFont)
-                    .foregroundStyle(hasItem ? palette.candidateText : Color.clear)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .padding(.horizontal, 8)
+                VStack(spacing: 0) {
+                    Text(displayText)
+                        .font(index == 0 && displayText.hasPrefix("“") ? Theme.rawCandidateFont : Theme.candidateFont)
+                        .foregroundStyle(hasItem ? palette.candidateText : Color.clear)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    if isSelected,
+                       !rawBuffer.isEmpty,
+                       text.caseInsensitiveCompare(rawBuffer) != .orderedSame {
+                        Text(rawBuffer)
+                            .font(.system(size: 8.5, weight: .medium, design: .rounded))
+                            .foregroundStyle(palette.candidateText.opacity(0.52))
+                            .lineLimit(1)
+                    }
+                }
+                .padding(.horizontal, 8)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!hasItem)
+        .accessibilityLabel(hasItem ? "Suggestion \(text)" : "Empty suggestion")
     }
 }

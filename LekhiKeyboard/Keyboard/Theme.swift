@@ -45,9 +45,9 @@ public enum Theme {
     /// Depression offset when a key is physically tapped down.
     public static let pressedDepression: CGFloat = 2.0
 
-    public static let rowSpacing: CGFloat = 7.0
-    public static let keySpacing: CGFloat = 5.5
-    public static let sideInset: CGFloat = 4.0
+    public static let rowSpacing: CGFloat = 6.0
+    public static let keySpacing: CGFloat = 5.0
+    public static let sideInset: CGFloat = 5.0
     public static let bottomInset: CGFloat = 6.0
 
     public static let keyHeight: CGFloat = 44.0
