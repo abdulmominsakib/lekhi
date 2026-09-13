@@ -4,6 +4,11 @@
 //
 //  Options and store for customizable keyboard height.
 //
+//  The "standard" numbers are measured off the reference design:
+//  a 1608 x 1368 px keyboard drawn for a 393 pt wide iPhone, i.e.
+//  4.0916 px per point. Cap 177 px (43.3 pt), skirt 26 px (6.4 pt),
+//  gap between rows 12 px (2.9 pt), candidate bar 198 px (48.4 pt).
+//
 
 import SwiftUI
 
@@ -28,11 +33,11 @@ public enum KeyboardHeightOption: String, CaseIterable, Identifiable, Sendable {
 
     public var subtitle: String {
         switch self {
-        case .compact:    return "Saves vertical screen space (~39 pt keys)"
-        case .standard:   return "Default native iOS-like proportions (44 pt keys)"
-        case .mediumTall: return "Slightly taller for easier reach (~47.5 pt keys)"
-        case .tall:       return "Comfortable large keys (~51 pt keys)"
-        case .extraTall:  return "Maximum size & thumb clearance (~55 pt keys)"
+        case .compact:    return "Saves vertical screen space (~38 pt keys)"
+        case .standard:   return "Matches the reference design (43.5 pt keys)"
+        case .mediumTall: return "Slightly taller for easier reach (~47 pt keys)"
+        case .tall:       return "Comfortable large keys (~50.5 pt keys)"
+        case .extraTall:  return "Maximum size & thumb clearance (~54.5 pt keys)"
         }
     }
 
@@ -46,35 +51,59 @@ public enum KeyboardHeightOption: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Key height in points for standard letter/number rows.
+    private static func halfPoint(_ value: CGFloat) -> CGFloat {
+        (value * 2).rounded() / 2
+    }
+
+    /// Height of the drawn keycap face (excludes the bevel skirt below it).
     public var keyHeight: CGFloat {
-        round(44.0 * scaleFactor * 2) / 2 // round to nearest half-point
+        Self.halfPoint(43.5 * scaleFactor)
     }
 
-    /// Suggestion bar height in points.
+    /// Height of the bevel skirt drawn under each cap; part of the key body.
+    public var keySkirt: CGFloat {
+        Self.halfPoint(6.5 * scaleFactor)
+    }
+
+    /// Full drawn height of one key: cap + skirt.
+    public var keyBodyHeight: CGFloat {
+        keyHeight + keySkirt
+    }
+
+    /// Candidate bar height.
     public var suggestionBarHeight: CGFloat {
-        round(42.0 * max(0.92, scaleFactor * 0.96) * 2) / 2
+        Self.halfPoint(48.0 * max(0.92, scaleFactor * 0.97))
     }
 
-    /// Top padding above the key grid / emoji picker.
-    public var topPadding: CGFloat {
-        4.0
-    }
+    /// Gap above the key grid.
+    public var topPadding: CGFloat { 2.0 }
 
-    /// Bottom padding below the key grid.
+    /// Gap below the last key row, before the system accessory row.
     public var bottomPadding: CGFloat {
-        round(6.0 * scaleFactor * 2) / 2
+        Self.halfPoint(5.0 * scaleFactor)
     }
 
-    /// Row spacing between key rows.
+    /// Vertical gap between key rows — the design leaves just enough room
+    /// for each cap's drop shadow.
     public var rowSpacing: CGFloat {
-        round(6.0 * max(0.90, scaleFactor * 0.95) * 2) / 2
+        Self.halfPoint(3.0 * max(0.9, scaleFactor))
     }
 
-    /// Total height for the UIInputViewController extension in portrait mode.
-    public var totalHeight: CGFloat {
-        let gridH = (keyHeight * 4) + (rowSpacing * 3)
-        return suggestionBarHeight + topPadding + gridH + bottomPadding + 6.0
+    /// Height of the four-row key grid, skirts included.
+    public var gridHeight: CGFloat {
+        (keyBodyHeight * 4) + (rowSpacing * 3)
+    }
+
+    /// Height to request for the input view.
+    ///
+    /// The candidate bar is only drawn in modes that have candidates, so it
+    /// must not be reserved in `.phoneticOnly` — otherwise the keyboard
+    /// carries a strip of dead plate. `safeAreaBottom` covers the home
+    /// indicator on iOS versions that do not hand custom keyboards their own
+    /// accessory row (iOS 26 does, and reports a zero inset there).
+    public func totalHeight(showsSuggestionBar: Bool, safeAreaBottom: CGFloat = 0) -> CGFloat {
+        let bar = showsSuggestionBar ? suggestionBarHeight : 0
+        return bar + topPadding + gridHeight + bottomPadding + safeAreaBottom
     }
 }
 

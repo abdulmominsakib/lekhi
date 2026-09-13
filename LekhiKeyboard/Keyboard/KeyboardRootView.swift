@@ -2,9 +2,14 @@
 //  KeyboardRootView.swift
 //  LekhiKeyboard
 //
-//  Top-level SwiftUI view for the keyboard. Hosts the
-//  candidate suggestion bar and the key grid, including the
-//  globe, emoji, space, and return controls in the bottom row.
+//  Top-level SwiftUI view for the keyboard. Hosts the candidate suggestion
+//  bar and the key grid.
+//
+//  The bar and the grid are deliberately separate views that each observe
+//  their own slice of `InputSession`. Every keystroke mutates the candidate
+//  list, and when one view read both the candidates and the layout state
+//  SwiftUI re-evaluated all thirty-odd keycaps — gradients, dish, shadow and
+//  all — on each tap, which is what made fast typing feel heavy.
 //
 
 import SwiftUI
@@ -34,51 +39,85 @@ public struct KeyboardRootView: View {
         session.theme.resolvedPalette(for: colorScheme)
     }
 
+    /// The plate follows the system keyboard container: rounded top corners on
+    /// iOS 26, a plain rectangle before that.
+    private var plateShape: UnevenRoundedRectangle {
+        let radius = Theme.usesRoundedContainer ? Theme.containerCornerRadius : 0
+        return UnevenRoundedRectangle(
+            topLeadingRadius: radius,
+            bottomLeadingRadius: 0,
+            bottomTrailingRadius: 0,
+            topTrailingRadius: radius,
+            style: .continuous
+        )
+    }
+
     public var body: some View {
         let heightOption = session.heightOption
+        let showsBar = !session.isEmojiMode && session.mode.showsSuggestionBar
 
         VStack(spacing: 0) {
-            // Suggestion / Candidate Bar (always visible)
-            if !session.isEmojiMode && session.mode.showsSuggestionBar {
-                SuggestionBarView(
-                    candidates: session.candidates,
-                    rawBuffer: session.buffer,
-                    selectedIndex: session.selectedIndex,
+            if showsBar {
+                CandidateBar(
+                    session: session,
                     palette: palette,
                     onTap: onCommitCandidate
                 )
                 .frame(height: heightOption.suggestionBarHeight)
             }
 
-            // Keyboard or Emoji Picker
             if session.isEmojiMode {
                 EmojiPickerView(
                     session: session,
                     palette: palette,
-                    onInsert: { text in
-                        onAction(.insertText(text))
-                    },
-                    onDelete: {
-                        onAction(.backspace(word: false))
-                    }
+                    onInsert: { text in onAction(.insertText(text)) },
+                    onDelete: { onAction(.backspace(word: false)) },
+                    onDismiss: { onAction(.emoji) }
                 )
                 .padding(.top, heightOption.topPadding)
                 .transition(.opacity)
             } else {
-                // Mechanical Key Grid (Rows 1–4)
-                KeyboardGrid(session: session, palette: palette, onAction: onAction, onSwipeLanguage: onSwipeLanguage)
-                    .padding(.horizontal, Theme.sideInset)
-                    .padding(.top, heightOption.topPadding)
-                    .padding(.bottom, heightOption.bottomPadding)
-                    .transition(.opacity)
+                KeyboardGrid(
+                    session: session,
+                    palette: palette,
+                    headroomAboveGrid: (showsBar ? heightOption.suggestionBarHeight : 0)
+                        + heightOption.topPadding,
+                    onAction: onAction,
+                    onSwipeLanguage: onSwipeLanguage
+                )
+                .padding(.horizontal, Theme.sideInset)
+                .padding(.top, heightOption.topPadding)
+                .padding(.bottom, heightOption.bottomPadding)
+                .transition(.opacity)
             }
 
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(palette.backgroundPlate)
+        .background(plateShape.fill(session.plateUsesSystemContainer ? Color.clear : palette.backgroundPlate))
+        // Keep the candidate highlight and anything else near the top edge
+        // inside the rounded corners too.
+        .clipShape(plateShape)
         .ignoresSafeArea()
-        .animation(.easeInOut(duration: 0.2), value: session.isEmojiMode)
+        .animation(.easeInOut(duration: 0.18), value: session.isEmojiMode)
+    }
+}
+
+/// Wrapper that observes only the candidate-related state, so a keystroke
+/// invalidates the bar and nothing else.
+private struct CandidateBar: View {
+    @Bindable var session: InputSession
+    let palette: KeyboardColorPalette
+    let onTap: (Int) -> Void
+
+    var body: some View {
+        SuggestionBarView(
+            candidates: session.candidates,
+            rawBuffer: session.buffer,
+            selectedIndex: session.selectedIndex,
+            palette: palette,
+            onTap: onTap
+        )
     }
 }
 
@@ -87,86 +126,113 @@ private struct KeyboardGrid: View {
 
     @Bindable var session: InputSession
     let palette: KeyboardColorPalette
+    /// Space between the top of the keyboard view and the first key row.
+    let headroomAboveGrid: CGFloat
     let onAction: (KeyAction) -> Void
     let onSwipeLanguage: ((Bool) -> Void)?
 
     var body: some View {
+        // Everything read here is layout state that only changes when the
+        // keyboard itself changes — never per keystroke.
+        let layoutMode = session.layoutMode
+        let isShifted = session.isShifted
+        let isCapsLocked = session.isCapsLocked
+        let layout = session.layout
+        let heightOption = session.heightOption
+        let showsGlobeKey = session.showsGlobeKey
+
         let rows: [KeyRow] = {
-            switch session.layoutMode {
+            switch layoutMode {
             case .letters:
                 return KeyboardLayoutFactory.letters(
-                    isShifted: session.isShifted,
-                    layout: session.layout
+                    isShifted: isShifted || isCapsLocked,
+                    layout: layout,
+                    showsGlobeKey: showsGlobeKey
                 )
             case .numbers:
-                return KeyboardLayoutFactory.numbers()
+                return KeyboardLayoutFactory.numbers(showsGlobeKey: showsGlobeKey)
             case .symbols:
-                return KeyboardLayoutFactory.symbols()
+                return KeyboardLayoutFactory.symbols(showsGlobeKey: showsGlobeKey)
             }
         }()
 
-        let keyHeight = session.heightOption.keyHeight
-        let rowSpacing = session.heightOption.rowSpacing
-        let totalGridHeight = (keyHeight * 4) + (rowSpacing * 3)
-
-        GeometryReader { proxy in
+        return GeometryReader { proxy in
             let totalWidth = proxy.size.width
-            let standardUnit = (totalWidth - (9 * Theme.keySpacing)) / 10.0
+            // Ten letter caps plus nine gaps fill the plate exactly; every
+            // other row's weights are expressed in those same units.
+            let unitWidth = (totalWidth - (9 * Theme.keySpacing)) / 10.0
 
-            VStack(spacing: rowSpacing) {
-                ForEach(rows) { row in
-                    rowView(for: row, totalWidth: totalWidth, unitWidth: standardUnit, keyHeight: keyHeight)
+            VStack(spacing: heightOption.rowSpacing) {
+                ForEach(Array(rows.enumerated()), id: \.element.id) { rowIndex, row in
+                    rowView(
+                        for: row,
+                        headroom: headroomAboveGrid
+                            + CGFloat(rowIndex) * (heightOption.keyBodyHeight + heightOption.rowSpacing),
+                        totalWidth: totalWidth,
+                        unitWidth: unitWidth,
+                        heightOption: heightOption,
+                        isShifted: isShifted,
+                        isCapsLocked: isCapsLocked,
+                        layout: layout
+                    )
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .frame(height: totalGridHeight)
+        .frame(height: heightOption.gridHeight)
     }
 
-    private func rowView(for row: KeyRow, totalWidth: CGFloat, unitWidth: CGFloat, keyHeight: CGFloat) -> some View {
+    private func rowView(
+        for row: KeyRow,
+        headroom: CGFloat,
+        totalWidth: CGFloat,
+        unitWidth: CGFloat,
+        heightOption: KeyboardHeightOption,
+        isShifted: Bool,
+        isCapsLocked: Bool,
+        layout: Layout
+    ) -> some View {
         let count = CGFloat(row.keys.count)
         let totalSpacing = (count - 1) * Theme.keySpacing
-        let hasCustomWeights = row.keys.contains { $0.widthWeight != 1.0 }
+        let fixedKeys = row.keys.filter { !$0.isFlexible }
+        let flexibleCount = CGFloat(row.keys.count - fixedKeys.count)
+        let fixedWidth = fixedKeys.reduce(CGFloat(0)) { $0 + ($1.widthWeight * unitWidth) }
+        // Whatever is left after the fixed keys goes to the spacebar. Clamped
+        // so a wide row can never push keys past the edge of a narrow screen.
+        let flexibleWidth = flexibleCount > 0
+            ? max((totalWidth - fixedWidth - totalSpacing) / flexibleCount, unitWidth)
+            : 0
+        let overflowScale = min(1, totalWidth / max(fixedWidth + totalSpacing + (flexibleWidth * flexibleCount), 1))
 
         return HStack(spacing: Theme.keySpacing) {
             ForEach(Array(row.keys.enumerated()), id: \.element.id) { index, key in
-                let keyWidth: CGFloat = {
-                    if !hasCustomWeights {
-                        return unitWidth
-                    } else if key.kind.isSpace {
-                        let otherKeysWidth = row.keys.filter { !$0.kind.isSpace }.reduce(CGFloat(0)) { acc, k in
-                            acc + (k.widthWeight * unitWidth)
-                        }
-                        return max(totalWidth - otherKeysWidth - totalSpacing, unitWidth * 3)
-                    } else {
-                        return key.widthWeight * unitWidth
-                    }
-                }()
-
-                let isFirst = index == 0
-                let isLast = index == (row.keys.count - 1)
+                let rawWidth = key.isFlexible ? flexibleWidth : key.widthWeight * unitWidth
 
                 KeyboardKey(
                     descriptor: key,
                     palette: palette,
-                    isShifted: session.isShifted,
-                    spacebarLabel: key.kind.isSpace ? session.layout.spacebarLabel : nil,
-                    keyHeight: keyHeight,
-                    isFirstInRow: isFirst,
-                    isLastInRow: isLast,
+                    isShifted: isShifted,
+                    isCapsLocked: isCapsLocked,
+                    spacebarLabel: key.kind.isSpace ? layout.spacebarLabel : nil,
+                    keyHeight: heightOption.keyHeight,
+                    skirtHeight: heightOption.keySkirt,
+                    showsCharacterPreview: session.showCharacterPreview,
+                    spacebarSwipeEnabled: session.spacebarSwipeEnabled && session.canSwitchLayouts,
+                    showsKeyHints: session.showKeyHints,
+                    isFirstInRow: index == 0,
+                    isLastInRow: index == (row.keys.count - 1),
+                    popupHeadroom: headroom,
                     onSwipeLanguage: key.kind.isSpace ? { forward in
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            if let onSwipeLanguage {
-                                onSwipeLanguage(forward)
-                            } else {
-                                session.cycleLanguage(forward: forward)
-                            }
+                        if let onSwipeLanguage {
+                            onSwipeLanguage(forward)
+                        } else {
+                            session.cycleLanguage(forward: forward)
                         }
                     } : nil
                 ) {
                     onAction(key.action)
                 }
-                .frame(width: keyWidth)
+                .frame(width: rawWidth * overflowScale)
             }
         }
     }

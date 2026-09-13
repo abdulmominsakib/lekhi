@@ -8,6 +8,20 @@
 
 import AudioToolbox
 import AVFoundation
+#if canImport(UIKit)
+import UIKit
+
+/// Opting the input view into `playInputClick()`.
+///
+/// `AudioServicesPlaySystemSound` is the engine behind the mechanical switch
+/// profiles, but a keyboard extension without Full Access cannot always reach
+/// the system sound server — which is why key clicks could come out silent on
+/// some devices. `UIDevice.playInputClick()` is the one click that is always
+/// available to a keyboard, and it only works if the input view declares it.
+extension UIInputView: @retroactive UIInputViewAudioFeedback {
+    public var enableInputClicksWhenVisible: Bool { true }
+}
+#endif
 
 public enum MechanicalSwitchProfile: String, CaseIterable, Identifiable, Sendable {
     case blue = "blue"       // Crisp clicky switch
@@ -80,6 +94,15 @@ public final class MechanicalSoundManager: @unchecked Sendable {
     public func playKeyPress(isReturn: Bool = false, isSpace: Bool = false, isModifier: Bool = false) {
         let profile = SoundStore.current()
         guard profile != .off else { return }
+
+        if profile == .classic {
+            // The guaranteed path inside a keyboard extension. Must run on the
+            // main thread, and needs `enableInputClicksWhenVisible` above.
+            #if canImport(UIKit)
+            UIDevice.current.playInputClick()
+            return
+            #endif
+        }
 
         DispatchQueue.global(qos: .userInitiated).async {
             switch profile {

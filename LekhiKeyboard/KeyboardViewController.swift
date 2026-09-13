@@ -1,6 +1,6 @@
 //
 //  KeyboardViewController.swift
-//  LekhoKeyboard
+//  LekhiKeyboard
 //
 //  The custom-keyboard entry point. Subclass of UIInputViewController
 //  that hosts the SwiftUI keyboard tree and routes user actions to
@@ -9,6 +9,58 @@
 
 import UIKit
 import SwiftUI
+
+/// Loads the transliteration engine off the main thread.
+///
+/// riti parses a 150 000-word dictionary when its context is created. Doing
+/// that inline in `viewDidLoad` stalled the keyboard's first appearance,
+/// which on slower devices is long enough to look like a hang. The keyboard
+/// now presents immediately and the first key press waits — by then loading
+/// has almost always already finished.
+private final class EngineLoader {
+
+    private let group = DispatchGroup()
+    private let lock = NSLock()
+    private var loaded: LekhiEngine?
+    private var isFinished = false
+
+    init(layout: Layout, mode: TypingMode) {
+        group.enter()
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            let built = LekhiEngineFactory.make(layout: layout, mode: mode)
+            lock.lock()
+            loaded = built
+            isFinished = true
+            lock.unlock()
+            group.leave()
+        }
+    }
+
+    /// Blocks until loading finishes. Safe to call from several places; a
+    /// `DispatchGroup` returns straight away once it is empty.
+    func engine() -> LekhiEngine? {
+        group.wait()
+        lock.lock()
+        defer { lock.unlock() }
+        return loaded
+    }
+
+    /// Non-blocking peek, for lifecycle paths that must never stall.
+    func engineIfLoaded() -> LekhiEngine? {
+        lock.lock()
+        defer { lock.unlock() }
+        return isFinished ? loaded : nil
+    }
+
+    func teardown() {
+        group.wait()
+        lock.lock()
+        let engine = loaded
+        loaded = nil
+        lock.unlock()
+        engine?.teardown()
+    }
+}
 
 final class KeyboardViewController: UIInputViewController {
 
@@ -34,7 +86,7 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - State
 
     private let session = InputSession()
-    private var engine: LekhiEngine?
+    private var engineLoader: EngineLoader?
     private var router: KeyRouter!
 
     private var hostingController: UIHostingController<KeyboardRootView>?
@@ -42,36 +94,39 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Lifecycle
 
-    override func loadView() {
-        super.loadView()
-        // Do not query traitCollection before view is in hierarchy
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Spin up the engine. Fail soft — keyboard still works for
-        // unaccented English if the engine never initialises.
+        // Kick the engine off in the background, then build the UI. Fail soft —
+        // the keyboard still types plain Latin if the engine never initialises,
+        // and the reason is recorded for the host app's diagnostics screen.
         rebuildEngine()
 
-        // Wire the router to the freshly-built session/engine.
-        router = KeyRouter(session: session, engine: engine)
+        router = KeyRouter(session: session) { [weak self] in
+            self?.engineLoader?.engine()
+        }
 
-        // Listen for settings changes from the host app.
+        // Listen for settings changes from the host app, and for light/dark
+        // flips so `.systemAuto` repaints its plate.
         observeSettingsChanges()
+        observeAppearanceChanges()
 
-        // Install the SwiftUI tree.
+        syncFullAccess()
+
+        // Let the input view take its height from our own constraint rather
+        // than the system default.
+        inputView?.allowsSelfSizing = true
+
         installKeyboardView()
         updateBackgroundTheme()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        syncFullAccess()
+        syncPreferences()
         let newLayout = LayoutStore.current()
         let newMode = TypingModeStore.current()
-        session.theme = ThemeStore.current()
-        session.heightOption = KeyboardHeightStore.current()
-        session.showCharacterPreview = CharacterPreviewStore.current()
         updateBackgroundTheme()
         updateKeyboardHeightConstraint()
         if session.layout != newLayout || session.mode != newMode {
@@ -79,7 +134,6 @@ final class KeyboardViewController: UIInputViewController {
             session.layout = newLayout
             session.mode = newMode
             rebuildEngine()
-            router = KeyRouter(session: session, engine: engine)
             installKeyboardView()
         }
     }
@@ -97,7 +151,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        updateBackgroundTheme()
+        updateGlobeKeyVisibility()
         updateKeyboardHeightConstraint()
     }
 
@@ -106,11 +160,49 @@ final class KeyboardViewController: UIInputViewController {
         updateKeyboardHeightConstraint()
     }
 
+    /// Publish whether iOS granted Full Access so the host app can explain it.
+    ///
+    /// A custom keyboard needs Full Access to drive the Taptic Engine; typing,
+    /// suggestions and the settings shared through the App Group work either
+    /// way.
+    ///
+    /// Only reported, never acted on: the feedback calls still go out either
+    /// way. Suppressing them here would silence working haptics on any OS
+    /// version that turns out not to gate them.
+    private func syncFullAccess() {
+        FullAccessReporter.record(hasFullAccess)
+    }
+
+    /// Mirror the shared preferences onto the session once, instead of having
+    /// every keycap read `UserDefaults` while it renders.
+    private func syncPreferences() {
+        session.theme = ThemeStore.current()
+        session.heightOption = KeyboardHeightStore.current()
+        session.showCharacterPreview = CharacterPreviewStore.current()
+        session.spacebarSwipeEnabled = SpacebarSwipeStore.current()
+        session.showKeyHints = KeyHintStore.current()
+        session.canSwitchLayouts = LayoutStore.enabled().count > 1
+        updateGlobeKeyVisibility()
+    }
+
+    /// iOS tells us whether this keyboard has to draw its own globe. Showing
+    /// one unconditionally duplicated the system switcher on iOS versions
+    /// that provide their own, and showed a dead key when Lekhi is the only
+    /// third-party keyboard installed.
+    private func updateGlobeKeyVisibility() {
+        if session.showsGlobeKey != needsInputModeSwitchKey {
+            session.showsGlobeKey = needsInputModeSwitchKey
+        }
+    }
+
     private func updateKeyboardHeightConstraint() {
         guard view.frame.width > 0 else { return }
-        let targetHeight = session.heightOption.totalHeight
+        let targetHeight = session.heightOption.totalHeight(
+            showsSuggestionBar: !session.isEmojiMode && session.mode.showsSuggestionBar,
+            safeAreaBottom: view.safeAreaInsets.bottom
+        )
         if let heightConstraint {
-            if heightConstraint.constant != targetHeight {
+            if abs(heightConstraint.constant - targetHeight) > 0.5 {
                 heightConstraint.constant = targetHeight
             }
         } else {
@@ -121,9 +213,10 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        updateBackgroundTheme()
+    private func observeAppearanceChanges() {
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+            self.updateBackgroundTheme()
+        }
     }
 
     private func updateBackgroundTheme() {
@@ -148,21 +241,52 @@ final class KeyboardViewController: UIInputViewController {
             return UITraitCollection.current.userInterfaceStyle == .dark
         }()
         let resolved = session.theme.resolvedPalette(for: isDark ? .dark : .light)
-        let bg = resolved.uiBackgroundPlate
+        // On iOS 26 the keyboard sits inside a system container with rounded
+        // top corners, and the plate is drawn by SwiftUI in that same shape.
+        // Painting the UIKit views too would put square corners back behind
+        // it; earlier systems have a square, full-bleed keyboard, so there the
+        // UIKit colour just covers the frame before SwiftUI's first pass.
+        let bg: UIColor = Theme.usesRoundedContainer ? .clear : resolved.uiBackgroundPlate
 
         viewIfLoaded?.backgroundColor = bg
         inputView?.backgroundColor = bg
         hostingController?.view.backgroundColor = .clear
+
+        let usesContainer = Theme.usesRoundedContainer && themeMatchesSystemContainer()
+        if session.plateUsesSystemContainer != usesContainer {
+            session.plateUsesSystemContainer = usesContainer
+        }
+    }
+
+    /// Whether the system keyboard container will be the same light/dark as
+    /// the active theme. The container follows the host text field — its
+    /// `keyboardAppearance`, or else the host app's appearance — not this
+    /// controller's override, so a forced-light theme in a dark app would put
+    /// light keys on a dark container. Those themes keep their own plate.
+    private func themeMatchesSystemContainer() -> Bool {
+        let containerIsDark: Bool = {
+            switch textDocumentProxy.keyboardAppearance {
+            case .dark: return true
+            case .light: return false
+            default:
+                let style = view.window?.traitCollection.userInterfaceStyle
+                    ?? UITraitCollection.current.userInterfaceStyle
+                return style == .dark
+            }
+        }()
+        switch session.theme {
+        case .systemAuto:     return true
+        case .classicLight:   return !containerIsDark
+        case .darkMechanical: return containerIsDark
+        case .amoledBlack, .retroBeige: return false
+        }
     }
 
     // MARK: - Engine
 
     private func rebuildEngine() {
-        engine?.teardown()
-        engine = LekhiEngineFactory.make(
-            layout: session.layout,
-            mode: session.mode
-        )
+        engineLoader?.teardown()
+        engineLoader = EngineLoader(layout: session.layout, mode: session.mode)
     }
 
     private func observeSettingsChanges() {
@@ -208,6 +332,7 @@ final class KeyboardViewController: UIInputViewController {
             Unmanaged<WeakBox>.fromOpaque(ptr).release()   // balance passRetained
             darwinObserverPtr = nil
         }
+        engineLoader?.teardown()
     }
 
     private func handleSettingsChanged() {
@@ -215,7 +340,6 @@ final class KeyboardViewController: UIInputViewController {
         let newMode = TypingModeStore.current()
         let newTheme = ThemeStore.current()
         let newHeight = KeyboardHeightStore.current()
-        let newPreview = CharacterPreviewStore.current()
 
         var needsReinstall = false
 
@@ -230,16 +354,17 @@ final class KeyboardViewController: UIInputViewController {
             needsReinstall = true
         }
 
-        if session.showCharacterPreview != newPreview {
-            session.showCharacterPreview = newPreview
-        }
+        session.showCharacterPreview = CharacterPreviewStore.current()
+        session.spacebarSwipeEnabled = SpacebarSwipeStore.current()
+        session.showKeyHints = KeyHintStore.current()
+        session.canSwitchLayouts = LayoutStore.enabled().count > 1
 
         if newLayout != session.layout || newMode != session.mode {
             commitActiveComposition()
             session.layout = newLayout
             session.mode = newMode
             rebuildEngine()
-            router = KeyRouter(session: session, engine: engine)
+            updateKeyboardHeightConstraint()
             needsReinstall = true
         }
 
@@ -283,13 +408,14 @@ final class KeyboardViewController: UIInputViewController {
         ])
         host.didMove(toParent: self)
         hostingController = host
+        updateBackgroundTheme()
     }
 
     private func handleSwipeLanguage(forward: Bool) {
+        guard LayoutStore.neighbour(of: session.layout, forward: forward) != session.layout else { return }
         commitActiveComposition()
         session.cycleLanguage(forward: forward)
         rebuildEngine()
-        router = KeyRouter(session: session, engine: engine)
         HapticManager.shared.candidateSelected()
     }
 
@@ -301,18 +427,27 @@ final class KeyboardViewController: UIInputViewController {
         isDispatching = true
         defer { isDispatching = false }
 
+        // Defensive: the direct-commit model never creates marked text, but
+        // clear any legacy composition so it can't offset delete counts.
+        textDocumentProxy.unmarkText()
+
         let outcome = router.route(action)
 
         switch outcome {
-        case .setMarkedText(let text):
-            textDocumentProxy.setMarkedText(
-                text,
-                selectedRange: NSRange(location: text.utf16.count, length: 0)
-            )
-        case .commitText(let text):
-            textDocumentProxy.insertText(text)
-        case .unmarkText:
-            textDocumentProxy.unmarkText()
+        case .replaceComposing(let deleteCount, let insert):
+            // The keyboard's own record of what it inserted is the source of
+            // truth here. `documentContextBeforeInput` is not usable for a
+            // cross-check at this point: the proxy lags our own edits by a
+            // frame, so it would report a stale prefix and we would skip the
+            // delete, leaving the previous transliteration behind.
+            // `reconcileExternalChange` handles genuine divergence instead,
+            // where the context has settled.
+            for _ in 0..<max(0, deleteCount) {
+                textDocumentProxy.deleteBackward()
+            }
+            if !insert.isEmpty {
+                textDocumentProxy.insertText(insert)
+            }
         case .insert(let text):
             textDocumentProxy.insertText(text)
         case .deleteBackward:
@@ -321,6 +456,12 @@ final class KeyboardViewController: UIInputViewController {
             advanceToNextInputMode()
         case .none:
             break
+        }
+
+        if case .emoji = action {
+            // The candidate bar disappears in emoji mode, so the input view
+            // needs to shrink with it.
+            updateKeyboardHeightConstraint()
         }
     }
 
@@ -334,79 +475,114 @@ final class KeyboardViewController: UIInputViewController {
         let chosen = session.candidates[index]
 
         if session.layout == .english {
-            let count = session.buffer.utf16.count
-            for _ in 0..<count {
+            for _ in 0..<DocumentEdit.deletionSteps(for: session.buffer) {
                 textDocumentProxy.deleteBackward()
             }
             textDocumentProxy.insertText(chosen + " ")
-            session.buffer = ""
-            session.clearSuggestions()
+            session.resetComposing()
             HapticManager.shared.candidateSelected()
             return
         }
 
-        guard let engine else { return }
+        guard let engine = engineLoader?.engineIfLoaded() else { return }
         _ = engine.commitCandidate(at: index)
         engine.finishSession()
-        textDocumentProxy.insertText(chosen)
-        session.buffer = ""
-        session.clearSuggestions()
+        // The live composing chunk is already in the document via
+        // direct-commit: swap it for the picked candidate, then freeze.
+        let old = session.committedBengali
+        session.resetComposing()
+        if chosen != old {
+            for _ in 0..<DocumentEdit.deletionSteps(for: old) {
+                textDocumentProxy.deleteBackward()
+            }
+            if !chosen.isEmpty {
+                textDocumentProxy.insertText(chosen)
+            }
+        }
         HapticManager.shared.candidateSelected()
     }
 
-    /// Commit marked text before an engine/layout transition. This keeps the
-    /// document proxy and riti buffer in lockstep across host-app callbacks.
+    /// Freeze the composition before an engine/layout transition. With the
+    /// direct-commit model the displayed Bengali chunk is already in the
+    /// document, so this only closes the engine session and clears keyboard
+    /// state — it never inserts text (which would duplicate).
     private func commitActiveComposition() {
+        let engine = engineLoader?.engineIfLoaded()
+
         guard session.hasActiveSession else {
             engine?.finishSession()
-            session.buffer = ""
-            session.clearSuggestions()
+            session.resetComposing()
             return
         }
 
         // English input is inserted directly on every keypress; its candidate
-        // state is advisory only, so there is no marked text to commit here.
+        // state is advisory only, so there is nothing to commit here.
         if session.layout == .english {
-            session.buffer = ""
-            session.clearSuggestions()
+            session.resetComposing()
             return
         }
 
-        let chosen = router?.resolveCurrentCandidate() ?? session.preEditText
-        if let engine,
-           session.selectedIndex >= 0,
-           session.selectedIndex < session.candidates.count,
-           engine.hasActiveSession {
-            _ = engine.commitCandidate(at: session.selectedIndex)
-        } else {
-            engine?.finishSession()
-        }
+        // Same as space: the word is already in the document, and only an
+        // explicit tap should teach riti a selection.
+        engine?.finishSession()
 
-        if !chosen.isEmpty {
+        // Repair-only fallback: if no Bengali was ever displayed for this
+        // composition (e.g. desync), insert the resolved candidate so the
+        // word isn't lost on the field/layout switch.
+        let chosen = router?.resolveCurrentCandidate() ?? session.preEditText
+        if session.committedBengali.isEmpty, !chosen.isEmpty {
             textDocumentProxy.insertText(chosen)
         }
-        session.buffer = ""
-        session.clearSuggestions()
+        session.resetComposing()
     }
 
     private func discardStaleCompositionState() {
-        engine?.finishSession()
-        session.buffer = ""
-        session.clearSuggestions()
+        engineLoader?.engineIfLoaded()?.finishSession()
+        session.resetComposing()
     }
 
     // MARK: - Text-document callbacks
 
-    override func textWillChange(_ textInput: (any UITextInput)?) {
-        super.textWillChange(textInput)
-        // Cursor moves, host-side edits, and field changes can invalidate marked
-        // text without telling the engine. Never carry that stale buffer forward.
-        if !isDispatching, session.hasActiveSession {
-            discardStaleCompositionState()
-        }
-    }
-
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
+        updateBackgroundTheme()
+        reconcileExternalChange()
+    }
+
+    override func selectionDidChange(_ textInput: (any UITextInput)?) {
+        super.selectionDidChange(textInput)
+        reconcileExternalChange()
+    }
+
+    /// Freeze the composition when the host document diverged from what the
+    /// keyboard inserted (cursor move, host autocorrect/rewrite, field
+    /// change, dictation). Our own recent edits still end with
+    /// `committedBengali`, so they pass the suffix check and keep state —
+    /// this is what makes the check safe against async callbacks for our
+    /// own `insertText` / `deleteBackward` batches (guarded separately by
+    /// `isDispatching` for the synchronous case).
+    private func reconcileExternalChange() {
+        guard !isDispatching, session.hasActiveSession else { return }
+        guard !session.committedBengali.isEmpty else { return }
+
+        // A missing context is not evidence that anything changed. The proxy
+        // reports nil for a beat after our own edit lands, and secure fields
+        // never report one at all. Treating nil as "the host rewrote the text"
+        // tore down the composition on the first letter of every word — the
+        // document still ended up with the right characters, but the engine
+        // restarted each time, so suggestions and multi-letter conjuncts never
+        // worked. Whether the nil window was hit came down to how quickly the
+        // host app answered, which is why it broke on some devices and apps
+        // and not others.
+        guard let before = textDocumentProxy.documentContextBeforeInput else {
+            return
+        }
+        if before.hasSuffix(session.committedBengali) {
+            return
+        }
+        // Cursor moved elsewhere, context unavailable (secure field), or the
+        // host rewrote the text: never delete across the new cursor. The
+        // already-inserted word stays as-is; the next keystroke starts fresh.
+        discardStaleCompositionState()
     }
 }

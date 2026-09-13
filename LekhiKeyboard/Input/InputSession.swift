@@ -17,11 +17,36 @@ public final class InputSession {
     public var mode: TypingMode
     public var theme: KeyboardThemeID
     public var heightOption: KeyboardHeightOption
+
+    // MARK: - User preferences
+    //
+    // Mirrored onto the session rather than read from `UserDefaults` inside
+    // `body`. The views used to call the stores while rendering, which meant
+    // a defaults lookup per keycap per frame.
+
     public var showCharacterPreview: Bool
+    public var spacebarSwipeEnabled: Bool
+    public var showKeyHints: Bool
+
+    /// Whether this keyboard has to draw its own input-mode switcher. iOS
+    /// answers through `UIInputViewController.needsInputModeSwitchKey`; on
+    /// versions that provide a system globe below the keyboard, drawing one
+    /// here too would be a duplicate.
+    public var showsGlobeKey: Bool = true
+
+    /// True when iOS's own keyboard container should serve as the plate.
+    ///
+    /// On iOS 26 the keyboard sits inside a system container that iOS paints
+    /// itself, including a strip above this view that the extension cannot
+    /// draw into. Any opaque plate therefore meets that strip along a visible
+    /// edge. When the theme's light/dark matches the container's, leaving the
+    /// plate transparent makes the container the one continuous background.
+    public var plateUsesSystemContainer: Bool = false
 
     // MARK: - View state
 
     public var isShifted: Bool = false
+    public var isCapsLocked: Bool = false
     public var layoutMode: KeyboardLayoutMode = .letters
     public var isEmojiMode: Bool = false
 
@@ -30,10 +55,19 @@ public final class InputSession {
         set { layoutMode = newValue ? .numbers : .letters }
     }
 
-    public func cycleLanguage(forward: Bool = true) {
-        let target = forward ? layout.nextLanguage : layout.previousLanguage
+    /// Whether more than one layout is turned on, i.e. whether a spacebar
+    /// swipe has anywhere to go.
+    public var canSwitchLayouts: Bool = LayoutStore.enabled().count > 1
+
+    /// Move to the next layout the user has turned on. Returns `false` when
+    /// there is nothing to switch to.
+    @discardableResult
+    public func cycleLanguage(forward: Bool = true) -> Bool {
+        let target = LayoutStore.neighbour(of: layout, forward: forward)
+        guard target != layout else { return false }
         layout = target
         LayoutStore.set(target)
+        return true
     }
 
     /// Up to three visible candidates.
@@ -51,32 +85,44 @@ public final class InputSession {
     /// Raw typed characters in current buffer.
     public var buffer: String = ""
 
+    /// Exact Bengali chunk currently inserted in the host document for the
+    /// active composition. Direct-commit model: the host document is the
+    /// display surface (no `setMarkedText`), so every keystroke deletes this
+    /// many graphemes and inserts the new transliteration.
+    public var committedBengali: String = ""
+
     public init(
         layout: Layout = LayoutStore.current(),
         mode: TypingMode = TypingModeStore.current(),
         theme: KeyboardThemeID = ThemeStore.current(),
         heightOption: KeyboardHeightOption = KeyboardHeightStore.current(),
-        showCharacterPreview: Bool = CharacterPreviewStore.current()
+        showCharacterPreview: Bool = CharacterPreviewStore.current(),
+        spacebarSwipeEnabled: Bool = SpacebarSwipeStore.current(),
+        showKeyHints: Bool = KeyHintStore.current()
     ) {
         self.layout = layout
         self.mode = mode
         self.theme = theme
         self.heightOption = heightOption
         self.showCharacterPreview = showCharacterPreview
+        self.spacebarSwipeEnabled = spacebarSwipeEnabled
+        self.showKeyHints = showKeyHints
     }
 
     // MARK: - Mutation helpers
 
     /// Apply a freshly generated suggestion to the visible state.
-    public func apply(_ suggestion: Suggestion) {
+    ///
+    /// `engineSessionActive` is riti's own answer to "am I still composing a
+    /// word?". The keyboard used to infer it from the shape of the result and
+    /// treat every `Suggestion::Single` as the end of a word, which dropped
+    /// the composition on the first letter of any word riti has only one
+    /// reading for — every vowel-initial word, `ami` included.
+    public func apply(_ suggestion: Suggestion, engineSessionActive: Bool) {
         candidates = suggestion.topThree
         preEditText = suggestion.preEditText
         selectedIndex = candidates.isEmpty ? -1 : suggestion.defaultIndex
-        // riti represents phonetic-only composition as Suggestion::Single even
-        // while its buffer is active. Keep that marked-text session alive until
-        // space/return instead of committing and resetting after every letter.
-        hasActiveSession = !suggestion.candidates.isEmpty
-            && (!suggestion.isLonely || mode == .phoneticOnly)
+        hasActiveSession = !suggestion.candidates.isEmpty && engineSessionActive
     }
 
     /// Clear the suggestion bar.
@@ -85,5 +131,13 @@ public final class InputSession {
         preEditText = ""
         selectedIndex = -1
         hasActiveSession = false
+    }
+
+    /// End the composition entirely: suggestion bar, latin buffer, and the
+    /// record of what was inserted into the host document.
+    public func resetComposing() {
+        buffer = ""
+        committedBengali = ""
+        clearSuggestions()
     }
 }

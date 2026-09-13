@@ -13,6 +13,7 @@ struct HomeView: View {
 
     @State private var isEnabled = false
     @State private var showTestField = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -40,6 +41,12 @@ struct HomeView: View {
                 TestTextFieldView()
             }
             .onAppear { isEnabled = checkKeyboardEnabled() }
+            // "Open Settings" sends the user out of the app to add the
+            // keyboard. Coming back doesn't re-run `onAppear`, so without this
+            // the card kept telling them to enable a keyboard they just enabled.
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { isEnabled = checkKeyboardEnabled() }
+            }
         }
     }
 

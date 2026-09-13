@@ -18,45 +18,91 @@ public enum DataPaths {
         "probhat.json"
     ]
 
-    /// Directory inside the App Group container where the bundled
-    /// JSON files are copied on first launch so both targets can
-    /// read them from a single location.
+    /// Legacy directory inside the App Group container where the bundled
+    /// JSON files used to be copied on first launch. Older builds pointed
+    /// the engine at this copy; we now read straight from the bundle.
     public static var sharedDataDir: URL? {
         AppGroup.containerURL?.appendingPathComponent(
             "LekhiData", isDirectory: true
         )
     }
 
-    /// Copy the bundled JSON files into the App Group container.
-    /// Safe to call repeatedly: existing files are left untouched.
-    public static func ensureDataFilesCopied() throws {
-        guard let dataDir = sharedDataDir else {
-            throw DataPathsError.appGroupUnavailable
+    /// Directory the riti engine should use as its `database_dir`.
+    ///
+    /// Both the host app and the keyboard extension embed the four data
+    /// files, so each target reads them from its own bundle. That matters:
+    /// the previous implementation copied 4 MB into the App Group with a
+    /// non-atomic `copyItem` on the main thread during keyboard start-up.
+    /// A keyboard extension is terminated aggressively (jetsam, dismissal),
+    /// and a copy interrupted half-way left a truncated `dictionary.json`
+    /// behind. The "already copied?" check was a plain `fileExists`, so the
+    /// broken file was never repaired, riti failed to parse it, context
+    /// creation returned NULL, and the keyboard silently fell back to
+    /// inserting raw Latin letters — permanently, on that device only.
+    ///
+    /// Returns `nil` when the bundle is incomplete, which the engine
+    /// surfaces as a diagnosable failure instead of a silent one.
+    public static func databaseDirectory() -> URL? {
+        guard let dictionary = findBundledResource("dictionary.json") else {
+            return nil
         }
-        let fm = FileManager.default
-        try fm.createDirectory(
-            at: dataDir,
-            withIntermediateDirectories: true
-        )
-
-        for name in shippedResources {
-            let destination = dataDir.appendingPathComponent(name)
-            if fm.fileExists(atPath: destination.path) { continue }
-            guard let source = findBundledResource(name) else {
-                throw DataPathsError.missingResource(name)
-            }
-            try fm.copyItem(at: source, to: destination)
+        let directory = dictionary.deletingLastPathComponent()
+        // The engine expects to find its whole data set in one directory.
+        let complete = shippedResources.allSatisfy { name in
+            FileManager.default.fileExists(
+                atPath: directory.appendingPathComponent(name).path
+            )
         }
+        return complete ? directory : nil
     }
 
-    /// Resolve the on-disk URL for a shipped data file. Prefers the
-    /// App Group container copy, falls back to the bundle.
-    public static func url(for resource: String) -> URL? {
-        if let shared = sharedDataDir?.appendingPathComponent(resource),
-           FileManager.default.fileExists(atPath: shared.path) {
-            return shared
+    /// Writable directory handed to riti for its user data (remembered
+    /// candidate selections). Falls back to the target's own caches
+    /// directory when the App Group is unavailable — for example when the
+    /// build is signed with a provisioning profile that lacks the group.
+    public static func userDirectory() -> URL? {
+        let base = AppGroup.containerURL
+            ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        guard let base else { return nil }
+        let directory = base.appendingPathComponent("RitiUser", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(
+                at: directory,
+                withIntermediateDirectories: true
+            )
+        } catch {
+            return nil
         }
-        return findBundledResource(resource)
+        return directory
+    }
+
+    /// Resolve the on-disk URL for a shipped data file, from the bundle.
+    public static func url(for resource: String) -> URL? {
+        findBundledResource(resource)
+    }
+
+    /// Remove the legacy App Group copy of the bundled data files.
+    ///
+    /// These are our own duplicates of read-only bundle resources — never
+    /// user data — so reclaiming them is safe, and it also clears any
+    /// half-written `dictionary.json` left by an older build. Only the
+    /// filenames we shipped are removed, and the directory only if it ends
+    /// up empty.
+    public static func removeLegacyAppGroupCopy() {
+        guard let dataDir = sharedDataDir else { return }
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: dataDir.path) else { return }
+
+        for name in shippedResources {
+            let file = dataDir.appendingPathComponent(name)
+            if fm.fileExists(atPath: file.path) {
+                try? fm.removeItem(at: file)
+            }
+        }
+        if let remaining = try? fm.contentsOfDirectory(atPath: dataDir.path),
+           remaining.isEmpty {
+            try? fm.removeItem(at: dataDir)
+        }
     }
 
     private static func findBundledResource(_ name: String) -> URL? {

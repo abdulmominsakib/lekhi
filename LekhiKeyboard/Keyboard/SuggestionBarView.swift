@@ -2,9 +2,12 @@
 //  SuggestionBarView.swift
 //  LekhiKeyboard
 //
-//  The sleek three-slot candidate bar at the top of the mechanical keyboard.
-//  Matches the design with thin vertical dividers, quote formatting for raw
-//  phonetic text, and a soft highlight pill for the selected candidate.
+//  The three-slot candidate bar above the key grid.
+//
+//  Matches the reference design: three equal cells across the full plate
+//  width, centred 17 pt text, and a pair of short hairline dividers on the
+//  thirds. The dividers are hidden while there is nothing to suggest — in
+//  the old build they hung in an otherwise empty bar and read as a glitch.
 //
 
 import SwiftUI
@@ -14,7 +17,7 @@ public struct SuggestionBarView: View {
     /// Up to 3 candidates to display.
     public let candidates: [String]
 
-    /// Raw input buffer for displaying phonetic quote (e.g. "ami").
+    /// Raw input buffer for displaying the phonetic quote (e.g. "ami").
     public let rawBuffer: String
 
     /// Index of the currently highlighted candidate.
@@ -23,7 +26,7 @@ public struct SuggestionBarView: View {
     /// Color palette from the active theme.
     public let palette: KeyboardColorPalette
 
-    /// Callback when user taps candidate at `index`.
+    /// Callback when the user taps the candidate at `index`.
     public let onTap: (Int) -> Void
 
     public init(
@@ -40,6 +43,10 @@ public struct SuggestionBarView: View {
         self.onTap = onTap
     }
 
+    private var hasAnyCandidate: Bool {
+        candidates.contains { !$0.isEmpty }
+    }
+
     public var body: some View {
         HStack(spacing: 0) {
             ForEach(0..<3, id: \.self) { i in
@@ -48,19 +55,16 @@ public struct SuggestionBarView: View {
                 if i < 2 {
                     Rectangle()
                         .fill(palette.candidateDivider)
-                        .frame(width: 0.75, height: 20)
+                        .frame(width: 0.75)
+                        .frame(maxHeight: .infinity)
+                        .padding(.vertical, 11)
+                        .opacity(hasAnyCandidate ? 1 : 0)
                 }
             }
         }
-        .padding(.horizontal, 4)
-        .frame(height: Theme.suggestionBarHeight)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(palette.candidateBarBackground)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(palette.candidateDivider.opacity(0.7))
-                .frame(height: 0.5)
-        }
+        .animation(.easeOut(duration: 0.12), value: hasAnyCandidate)
     }
 
     @ViewBuilder
@@ -69,11 +73,11 @@ public struct SuggestionBarView: View {
         let text = hasItem ? candidates[index] : ""
         let isSelected = index == selectedIndex && hasItem
 
-        // Format candidate text: if it's index 0 and matches raw phonetic input, wrap in quotes e.g. "The"
+        // The literal phonetic reading is quoted, matching the design's “The”.
         let displayText: String = {
             guard hasItem else { return "" }
-            if index == 0 && !rawBuffer.isEmpty && text.lowercased() == rawBuffer.lowercased() {
-                return "“\(text)”"
+            if index == 0, !rawBuffer.isEmpty, text.lowercased() == rawBuffer.lowercased() {
+                return "\u{201C}\(text)\u{201D}"
             }
             return text
         }()
@@ -84,29 +88,18 @@ public struct SuggestionBarView: View {
         } label: {
             ZStack {
                 if isSelected {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(palette.candidateSelectedFill)
                         .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 5)
                 }
 
-                VStack(spacing: 0) {
-                    Text(displayText)
-                        .font(index == 0 && displayText.hasPrefix("“") ? Theme.rawCandidateFont : Theme.candidateFont)
-                        .foregroundStyle(hasItem ? palette.candidateText : Color.clear)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-
-                    if isSelected,
-                       !rawBuffer.isEmpty,
-                       text.caseInsensitiveCompare(rawBuffer) != .orderedSame {
-                        Text(rawBuffer)
-                            .font(.system(size: 8.5, weight: .medium, design: .rounded))
-                            .foregroundStyle(palette.candidateText.opacity(0.52))
-                            .lineLimit(1)
-                    }
-                }
-                .padding(.horizontal, 8)
+                Text(displayText)
+                    .font(Theme.candidateFont)
+                    .foregroundStyle(palette.candidateText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .padding(.horizontal, 10)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -114,5 +107,6 @@ public struct SuggestionBarView: View {
         .buttonStyle(.plain)
         .disabled(!hasItem)
         .accessibilityLabel(hasItem ? "Suggestion \(text)" : "Empty suggestion")
+        .accessibilityHidden(!hasItem)
     }
 }

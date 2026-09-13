@@ -79,9 +79,14 @@ public final class HapticManager: @unchecked Sendable {
             break
 
         case .subtle:
-            // Ultra-gentle, whisper-soft cushion tap (zero jarring motor vibration)
-            softGenerator.prepare()
-            softGenerator.impactOccurred(intensity: 0.18)
+            // The system selection tick — the faint click a picker wheel makes.
+            // This used to be the `.soft` impact at 18% intensity, which is
+            // below what the Taptic Engine will actually actuate: `.soft` is
+            // already the weakest, most damped waveform, so scaling it that far
+            // produced nothing. The selection tick has a fixed, always-felt
+            // strength and still sits clearly below "Light".
+            selectionGenerator.selectionChanged()
+            selectionGenerator.prepare()
 
         case .light:
             // Subtle, crisp light keystroke tap

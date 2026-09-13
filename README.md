@@ -24,7 +24,7 @@
 
 - **⌨️ Avro Phonetic Typing**: Write natural Bengali using intuitive phonetic English syntax (e.g., `ami` → **আমি**, `bangla` → **বাংলা**).
 - **🔊 Tactile 3D Mechanical Keycaps & Audio**: Authentic mechanical switch sound profiles (**Blue Switch (Clicky)**, **Brown Switch (Tactile)**, **Red Switch (Linear)**, **Black Switch**, and **Cream Switch**).
-- **📳 Haptic Touch Engine**: Responsive, finely-tuned physical vibration for every keystroke with adjustable intensity (**Light**, **Medium**, **Strong**) that works reliably even without "Full Access".
+- **📳 Haptic Touch Engine**: Responsive, finely-tuned physical vibration for every keystroke with adjustable intensity (**Light**, **Medium**, **Strong**). Requires **Allow Full Access** — iOS does not let a custom keyboard drive the Taptic Engine without it.
 - **🔍 Apple-Style Keypress Highlight & Popups**: Native elevated character preview magnification balloons and active keypress depression on touch-down.
 - **📐 Adjustable Keyboard Height**: 5 calibrated ergonomic height options (**Compact**, **Standard**, **Medium Tall**, **Tall**, and **Extra Tall**) to fit any screen size or thumb reach.
 - **📚 150,000+ Word Dictionary & Smart Autocorrect**: On-device candidate suggestions with a three-card suggestion bar.
@@ -33,7 +33,7 @@
 - **📖 Integrated Avro Cheat Sheet**: Searchable reference guide for Vowels (স্বরবর্ণ), Consonants (ব্যঞ্জনবর্ণ), Kar (কার), and Conjuncts (যুক্তবর্ণ).
 - **⚡ Bangla Typing Speed Test**: Built-in speed typing practice game with live Words-Per-Minute (WPM), accuracy tracking, and time metrics.
 - **🎨 Premium Theme Collection**: Classic Mechanical (Light), Onyx Mechanical (Dark), Pure AMOLED Black, Retro 80s Beige, and automatic iOS system appearance.
-- **🛡️ 100% Offline & Private**: Zero network requests, zero telemetry, and **no "Allow Full Access" permissions required**.
+- **🛡️ 100% Offline & Private**: Zero network requests and zero telemetry. Lekhi asks for **Allow Full Access** only so iOS will let it drive the Taptic Engine for key vibrations — it contains no networking code at all, and every keystroke stays on your device.
 
 ---
 
@@ -71,11 +71,11 @@
 │  └─ RitiFFI.xcframework (statically linked Rust engine)     │
 │                                                             │
 │  App Group Shared Container (group.com.lekhi.ios)           │
-│  └─ dictionary.json • autocorrect.json • suffix.json        │
+│  └─ settings • riti remembered candidate picks              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Both the host application and keyboard extension operate securely within iOS app sandboxing and share dictionary data through the App Group container (`group.com.lekhi.ios`).
+Both targets embed the engine's data files (`dictionary.json`, `autocorrect.json`, `suffix.json`, `probhat.json`) and read them from their own bundle. The App Group container (`group.com.lekhi.ios`) carries your settings from the app to the keyboard, and riti's remembered candidate picks.
 
 ---
 
@@ -118,8 +118,9 @@ Select the **Lekhi** scheme and choose your target simulator or connected iOS de
 1. Launch the **Lekhi** app once to initialize dictionary resources.
 2. Open iOS **Settings** → **General** → **Keyboard** → **Keyboards**.
 3. Tap **Add New Keyboard...** and choose **Lekhi** under Third-Party Keyboards.
-4. Open any app (Notes, Messages, WhatsApp, Safari), tap the text field, and tap/hold the **🌐 globe key** to select **Lekhi**.
-5. Start typing in phonetic English (e.g. `ami banglay gan gai` → **আমি বাংলায় গান গাই**)!
+4. *(Optional)* Tap **Lekhi** in that list and turn on **Allow Full Access** to get key vibrations. Everything else works without it.
+5. Open any app (Notes, Messages, WhatsApp, Safari), tap the text field, and tap/hold the **🌐 globe key** to select **Lekhi**.
+6. Start typing in phonetic English (e.g. `ami banglay gan gai` → **আমি বাংলায় গান গাই**)!
 
 ---
 
@@ -127,7 +128,7 @@ Select the **Lekhi** scheme and choose your target simulator or connected iOS de
 
 Lekhi is built with strict privacy principles:
 - **No Network Permissions**: Lekhi has zero internet access capabilities.
-- **No Open Access Required**: `RequestsOpenAccess` is set to `false`.
+- **Full Access, and what it is used for**: `RequestsOpenAccess` is `true`, which iOS requires before a custom keyboard can drive the Taptic Engine for key vibrations. It is not used for anything else: Lekhi links no networking framework and makes no requests, so nothing you type can leave your device. Declining only turns off the vibrations — typing, suggestions and your settings all work without it.
 - **Zero Keystroke Logging**: Your keystrokes never leave your phone's memory.
 - **Zero Analytics / Telemetry**: No third-party SDKs or tracking pixels.
 

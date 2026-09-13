@@ -4,6 +4,10 @@
 //
 //  Static description of the mechanical keyboard rows and layout modes.
 //
+//  Row shapes follow the reference design, where every row spans the full
+//  plate width: the home row widens its outer two caps (220 px vs 143 px)
+//  rather than being inset, and the bottom row is mode | space | return.
+//
 
 import Foundation
 
@@ -16,6 +20,11 @@ public struct KeyRow: Identifiable {
         self.id = id
         self.keys = keys
     }
+
+    /// Total width of the row in "letter key" units.
+    public var totalWeight: CGFloat {
+        keys.reduce(0) { $0 + $1.widthWeight }
+    }
 }
 
 /// Description of a single key.
@@ -26,6 +35,9 @@ public struct KeyDescriptor: Identifiable {
     public let kind: KeyKind
     public let action: KeyAction
     public let widthWeight: CGFloat
+    /// Keys that absorb whatever width is left over once the fixed-width keys
+    /// have been laid out — only the spacebar, in practice.
+    public let isFlexible: Bool
 
     public init(
         id: String? = nil,
@@ -33,7 +45,8 @@ public struct KeyDescriptor: Identifiable {
         bengaliHint: String? = nil,
         kind: KeyKind,
         action: KeyAction,
-        widthWeight: CGFloat? = nil
+        widthWeight: CGFloat? = nil,
+        isFlexible: Bool = false
     ) {
         self.id = id ?? label
         self.label = label
@@ -41,6 +54,7 @@ public struct KeyDescriptor: Identifiable {
         self.kind = kind
         self.action = action
         self.widthWeight = widthWeight ?? kind.widthMultiplier
+        self.isFlexible = isFlexible || kind.isSpace
     }
 }
 
@@ -52,9 +66,13 @@ public enum KeyboardLayoutMode {
 
 public enum KeyboardLayoutFactory {
 
+    /// Width of the home row's outer caps, in letter-key units.
+    /// Design: 220 px against a 143 px letter cap.
+    private static let homeRowEdgeWeight: CGFloat = 1.538
+
     private static let avroHints: [Character: String] = [
         "q": "ক", "w": "ও", "e": "এ", "r": "র", "t": "ত",
-        "y": "য়", "u": "উ", "i": "ই", "o": "ও", "p": "প",
+        "y": "য়", "u": "উ", "i": "ই", "o": "ও", "p": "প",
         "a": "আ", "s": "স", "d": "দ", "f": "ফ", "g": "গ",
         "h": "হ", "j": "জ", "k": "ক", "l": "ল", "z": "য",
         "x": "ক্স", "c": "চ", "v": "ভ", "b": "ব", "n": "ন", "m": "ম"
@@ -64,69 +82,111 @@ public enum KeyboardLayoutFactory {
         "q": "দ", "w": "ূ", "e": "ী", "r": "র", "t": "ট",
         "y": "এ", "u": "ু", "i": "ি", "o": "ো", "p": "প",
         "a": "া", "s": "স", "d": "ড", "f": "ত", "g": "গ",
-        "h": "হ", "j": "জ", "k": "ক", "l": "ল", "z": "য়",
+        "h": "হ", "j": "জ", "k": "ক", "l": "ল", "z": "য়",
         "x": "শ", "c": "চ", "v": "আ", "b": "ব", "n": "ন", "m": "ম"
     ]
 
     /// Four rows: q-p / a-l / shift z-m backspace / 123 space return
-    public static func letters(isShifted: Bool, layout: Layout) -> [KeyRow] {
+    public static func letters(
+        isShifted: Bool,
+        layout: Layout,
+        showsGlobeKey: Bool
+    ) -> [KeyRow] {
         let top = letterRow(
             rowId: "letters-row-0",
             letters: "qwertyuiop",
             shifted: isShifted,
             layout: layout
         )
-        let middle = letterRow(
+        var middle = letterRow(
             rowId: "letters-row-1",
             letters: "asdfghjkl",
             shifted: isShifted,
             layout: layout
         )
+        middle = widenEdges(of: middle)
         let bottom = shiftRow(rowId: "letters-row-2", shifted: isShifted, layout: layout)
-        let pads   = bottomRow(rowId: "letters-row-3", modeLabel: "123", modeAction: .switchLayout)
-        
+        let pads   = bottomRow(
+            rowId: "letters-row-3",
+            modeLabel: "123",
+            modeAction: .switchLayout,
+            showsGlobeKey: showsGlobeKey
+        )
+
         return [top, middle, bottom, pads]
     }
 
     /// Numbers and punctuation ("123").
-    public static func numbers() -> [KeyRow] {
+    public static func numbers(showsGlobeKey: Bool) -> [KeyRow] {
         let row1 = KeyRow(id: "numbers-row-0", keys: "1234567890".enumerated().map { i, ch in
             KeyDescriptor(id: "num-\(i)-\(ch)", label: String(ch), kind: .letter, action: .character(ch))
         })
         let row2 = letterRow(rowId: "numbers-row-1", letters: "-/:;()$&@\"", shifted: false)
         let row3 = KeyRow(id: "numbers-row-2", keys: [
-            KeyDescriptor(id: "num-sym-toggle", label: "#+=", kind: .action, action: .switchSymbols, widthWeight: 2.75),
+            KeyDescriptor(id: "num-sym-toggle", label: "#+=", kind: .action, action: .switchSymbols, widthWeight: 2.6),
             KeyDescriptor(id: "num-dot", label: ".", kind: .letter, action: .character(".")),
             KeyDescriptor(id: "num-comma", label: ",", kind: .letter, action: .character(",")),
             KeyDescriptor(id: "num-question", label: "?", kind: .letter, action: .character("?")),
             KeyDescriptor(id: "num-exclaim", label: "!", kind: .letter, action: .character("!")),
             KeyDescriptor(id: "num-quote", label: "'", kind: .letter, action: .character("'")),
-            KeyDescriptor(id: "num-backspace", label: "⌫", kind: .action, action: .backspace(word: false), widthWeight: 2.75)
+            KeyDescriptor(id: "num-backspace", label: "⌫", kind: .action, action: .backspace(word: false), widthWeight: 2.6)
         ])
-        let pads = numberBottomRow(rowId: "numbers-row-3", modeLabel: "ABC", modeAction: .switchLayout)
+        let pads = bottomRow(
+            rowId: "numbers-row-3",
+            modeLabel: "ABC",
+            modeAction: .switchLayout,
+            showsGlobeKey: showsGlobeKey
+        )
 
         return [row1, row2, row3, pads]
     }
 
     /// Symbol mode ("#+=").
-    public static func symbols() -> [KeyRow] {
+    public static func symbols(showsGlobeKey: Bool) -> [KeyRow] {
         let row1 = letterRow(rowId: "symbols-row-0", letters: "[]{}#%^*+=", shifted: false)
         let row2 = letterRow(rowId: "symbols-row-1", letters: "_\\|~<>€£¥•", shifted: false)
         let row3 = KeyRow(id: "symbols-row-2", keys: [
-            KeyDescriptor(id: "sym-123-toggle", label: "123", kind: .action, action: .switchSymbols, widthWeight: 2.75),
+            KeyDescriptor(id: "sym-123-toggle", label: "123", kind: .action, action: .switchSymbols, widthWeight: 2.6),
             KeyDescriptor(id: "sym-dari", label: "।", kind: .letter, action: .character("।")), // Bangla Dari
             KeyDescriptor(id: "sym-bisarga", label: "ঃ", kind: .letter, action: .character("ঃ")), // Bisarga
             KeyDescriptor(id: "sym-anusvara", label: "ং", kind: .letter, action: .character("ং")), // Anusvara
             KeyDescriptor(id: "sym-chandrabindu", label: "ঁ", kind: .letter, action: .character("ঁ")), // Chandrabindu
             KeyDescriptor(id: "sym-quote", label: "'", kind: .letter, action: .character("'")),
-            KeyDescriptor(id: "sym-backspace", label: "⌫", kind: .action, action: .backspace(word: false), widthWeight: 2.75)
+            KeyDescriptor(id: "sym-backspace", label: "⌫", kind: .action, action: .backspace(word: false), widthWeight: 2.6)
         ])
-        let pads = numberBottomRow(rowId: "symbols-row-3", modeLabel: "ABC", modeAction: .switchLayout)
+        let pads = bottomRow(
+            rowId: "symbols-row-3",
+            modeLabel: "ABC",
+            modeAction: .switchLayout,
+            showsGlobeKey: showsGlobeKey
+        )
 
         return [row1, row2, row3, pads]
     }
 
     // MARK: - Helpers
+
+    /// Stretch a nine-key row out to the full plate width by widening its
+    /// outer caps, the way the design draws the home row.
+    private static func widenEdges(of row: KeyRow) -> KeyRow {
+        guard row.keys.count > 2 else { return row }
+        var keys = row.keys
+        keys[0] = resized(keys[0], to: homeRowEdgeWeight)
+        keys[keys.count - 1] = resized(keys[keys.count - 1], to: homeRowEdgeWeight)
+        return KeyRow(id: row.id, keys: keys)
+    }
+
+    private static func resized(_ key: KeyDescriptor, to weight: CGFloat) -> KeyDescriptor {
+        KeyDescriptor(
+            id: key.id,
+            label: key.label,
+            bengaliHint: key.bengaliHint,
+            kind: key.kind,
+            action: key.action,
+            widthWeight: weight,
+            isFlexible: key.isFlexible
+        )
+    }
 
     private static func letterRow(
         rowId: String,
@@ -179,23 +239,33 @@ public enum KeyboardLayoutFactory {
         )
     }
 
-    private static func bottomRow(rowId: String, modeLabel: String, modeAction: KeyAction) -> KeyRow {
-        KeyRow(id: rowId, keys: [
-            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.35),
-            KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 0.95),
-            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 0.95),
-            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 4.95),
-            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 1.8)
-        ])
-    }
-
-    private static func numberBottomRow(rowId: String, modeLabel: String, modeAction: KeyAction) -> KeyRow {
-        KeyRow(id: rowId, keys: [
-            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.35),
-            KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 0.95),
-            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 0.95),
-            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, widthWeight: 4.95),
-            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 1.8)
-        ])
+    /// The design's bottom row is mode | space | return. The globe is only
+    /// added when iOS says this keyboard has to provide its own input-mode
+    /// switcher — on iOS versions that draw a system globe below the
+    /// keyboard, including one here would be a duplicate.
+    private static func bottomRow(
+        rowId: String,
+        modeLabel: String,
+        modeAction: KeyAction,
+        showsGlobeKey: Bool
+    ) -> KeyRow {
+        var keys: [KeyDescriptor] = [
+            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.75)
+        ]
+        if showsGlobeKey {
+            keys.append(
+                KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 1.25)
+            )
+        }
+        keys.append(
+            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 1.25)
+        )
+        keys.append(
+            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, isFlexible: true)
+        )
+        keys.append(
+            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 2.2)
+        )
+        return KeyRow(id: rowId, keys: keys)
     }
 }

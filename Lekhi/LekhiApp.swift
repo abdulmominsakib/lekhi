@@ -14,8 +14,13 @@ struct LekhiApp: App {
     private var onboardingCompleted: Bool = true
 
     init() {
-        // Copy data files so both host and keyboard extension have them
-        try? DataPaths.ensureDataFilesCopied()
+        // Both targets embed the engine's data files, so nothing needs to be
+        // copied at launch. Reclaim the 4 MB duplicate older builds wrote into
+        // the App Group (and with it any half-written file a terminated
+        // keyboard extension left behind).
+        DispatchQueue.global(qos: .utility).async {
+            DataPaths.removeLegacyAppGroupCopy()
+        }
     }
 
     var body: some Scene {

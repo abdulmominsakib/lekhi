@@ -2,10 +2,7 @@
 //  RitiEngine.swift
 //  SharedKit
 //
-//  Safe, dual-context Swift wrapper around the OpenBangla/riti engine used
-//  by Lekho. Runs a shadow phonetic context in lockstep when in phonetic-first
-//  mode so the literal transliteration is accurately matched without corrupting
-//  dictionary candidate ranking.
+//  Safe Swift wrapper around the OpenBangla/riti engine used by Lekhi.
 //
 
 import Foundation
@@ -16,47 +13,41 @@ public final class RitiEngine: LekhiEngine {
     private var context: OpaquePointer?
     private var config: OpaquePointer?
 
-    /// Shadow context running phonetic-only, used in `.phoneticFirst` to obtain the
-    /// raw transliteration of the current buffer so it can be default-selected in
-    /// the main suggestion list (mirroring Lekho). Nil in other modes.
-    private var phoneticContext: OpaquePointer?
-    private var phoneticConfig: OpaquePointer?
-
-    /// Raw phonetic transliteration of the current buffer (from `phoneticContext`).
-    private var currentPhonetic: String?
-
     /// Maps each visible keyboard candidate back to riti's source index.
     private var visibleCandidateIndices: [Int] = []
     private var sourceCandidateCount = 0
 
     private let mode: TypingMode
 
+    /// Typing shortcuts (qq, TH, hs, consonant+z) are phonetic conventions, so
+    /// they only apply to Avro — Probhat is a fixed layout.
+    private let appliesShortcuts: Bool
+
+    /// The Latin buffer exactly as the user typed it.
+    private var typed = ""
+
+    /// What riti's own buffer currently holds: `typed` with its shortcuts
+    /// rewritten into Avro. The two diverge whenever a shortcut is in play
+    /// (`caqq` is fed to riti as `ca^`), and a later key can change how an
+    /// earlier part rewrites (`allahhs` ends in hasanta, `allahhsa` does not),
+    /// so riti is resynchronised on every edit rather than fed one key.
+    private var fed = ""
+
     public init?(layout: Layout, mode: TypingMode) {
         self.mode = mode
+        self.appliesShortcuts = layout == .avroPhonetic
 
-        // The extension can read its bundled resources directly. Copying them
-        // into the App Group is best-effort and must never block initialization.
-        try? DataPaths.ensureDataFilesCopied()
+        // The engine's data files live in this target's own bundle. Nothing
+        // is copied anywhere: see `DataPaths.databaseDirectory()`.
+        guard let databaseDir = DataPaths.databaseDirectory()?.path else {
+            EngineDiagnostics.record(.missingDataFiles)
+            return nil
+        }
 
-        let databaseDir: String = {
-            if let shared = DataPaths.sharedDataDir?.path,
-               FileManager.default.fileExists(atPath: shared) {
-                return shared
-            }
-            return Bundle.main.resourcePath ?? NSTemporaryDirectory()
-        }()
-
-        let userDir: String = {
-            if let shared = AppGroup.containerURL?.appendingPathComponent("RitiUser").path {
-                return shared
-            }
-            return NSTemporaryDirectory() + "/LekhiRitiUser"
-        }()
-
-        try? FileManager.default.createDirectory(
-            atPath: userDir,
-            withIntermediateDirectories: true
-        )
+        guard let userDir = DataPaths.userDirectory()?.path else {
+            EngineDiagnostics.record(.noWritableUserDirectory)
+            return nil
+        }
 
         guard let handle = Self.makeContext(
             layout: layout,
@@ -64,23 +55,13 @@ public final class RitiEngine: LekhiEngine {
             userDir: userDir,
             phoneticSuggestion: mode != .phoneticOnly
         ) else {
+            EngineDiagnostics.record(.contextCreationFailed)
             return nil
         }
 
         config = handle.config
         context = handle.context
-
-        if mode == .phoneticFirst {
-            if let shadowHandle = Self.makeContext(
-                layout: layout,
-                databaseDir: databaseDir,
-                userDir: userDir,
-                phoneticSuggestion: false
-            ) {
-                phoneticConfig = shadowHandle.config
-                phoneticContext = shadowHandle.context
-            }
-        }
+        EngineDiagnostics.record(.ready)
     }
 
     deinit {
@@ -93,34 +74,93 @@ public final class RitiEngine: LekhiEngine {
     }
 
     public func handleKey(_ character: Character) -> Suggestion {
-        guard let context,
+        guard context != nil,
               let scalar = character.unicodeScalars.first,
-              scalar.value < 0x80 else {
+              scalar.value < 0x80,
+              avro_keycode_for_char(scalar.value) != 0 else {
             return .empty
         }
-
-        let keycode = avro_keycode_for_char(scalar.value)
-        guard keycode != 0,
-              let raw = riti_get_suggestion_for_key(context, keycode, 0, 0) else {
-            return .empty
-        }
-        defer { riti_suggestion_free(raw) }
-
-        feedPhoneticShadow(keycode: keycode)
-
-        return suggestion(from: raw)
+        typed.append(character)
+        return synchronise()
     }
 
     public func backspace(word: Bool) -> Suggestion {
-        guard let context,
-              let raw = riti_context_backspace_event(context, word) else {
+        guard context != nil, !typed.isEmpty else { return .empty }
+        if word {
+            typed = ""
+        } else {
+            typed.removeLast()
+        }
+        return synchronise()
+    }
+
+    /// Bring riti's buffer in line with `typed`, touching as little as
+    /// possible: back up to the longest shared prefix, then feed the rest.
+    /// Usually that is a single new key.
+    private func synchronise() -> Suggestion {
+        guard let context else { return .empty }
+
+        // riti ends its session on its own when its buffer empties.
+        if !riti_context_ongoing_input_session(context) {
+            fed = ""
+        }
+
+        let target = rewritten(typed)
+        let fedChars = Array(fed)
+        let targetChars = Array(target)
+        var shared = 0
+        while shared < fedChars.count, shared < targetChars.count,
+              fedChars[shared] == targetChars[shared] {
+            shared += 1
+        }
+
+        var last: OpaquePointer?
+        defer { if let last { riti_suggestion_free(last) } }
+
+        func replace(with next: OpaquePointer?) {
+            if let last { riti_suggestion_free(last) }
+            last = next
+        }
+
+        for _ in shared..<fedChars.count {
+            replace(with: riti_context_backspace_event(context, false))
+        }
+        fed = String(fedChars[0..<shared])
+
+        for character in targetChars[shared...] {
+            guard let scalar = character.unicodeScalars.first else { continue }
+            let keycode = avro_keycode_for_char(scalar.value)
+            guard keycode != 0 else {
+                // Can't happen for the rewrites above, but never leave riti
+                // and `fed` disagreeing about what riti holds.
+                finishSession()
+                return .empty
+            }
+            replace(with: riti_get_suggestion_for_key(context, keycode, 0, 0))
+            fed.append(character)
+        }
+
+        // Nothing changed riti's buffer (a rewrite absorbed the edit), so ask
+        // for the current suggestion by stepping back and forward one key.
+        if last == nil, let final = fed.last, let scalar = final.unicodeScalars.first {
+            replace(with: riti_context_backspace_event(context, false))
+            replace(with: riti_get_suggestion_for_key(context, avro_keycode_for_char(scalar.value), 0, 0))
+        }
+
+        guard let raw = last else {
+            clearCandidateState()
             return .empty
         }
-        defer { riti_suggestion_free(raw) }
-
-        backspacePhoneticShadow(word: word)
-
         return suggestion(from: raw)
+    }
+
+    private func rewritten(_ term: String) -> String {
+        guard appliesShortcuts, !term.isEmpty,
+              let pointer = avro_apply_shortcuts(term) else {
+            return term
+        }
+        defer { riti_string_free(pointer) }
+        return String(cString: pointer)
     }
 
     public func commitCandidate(at index: Int) -> Suggestion {
@@ -147,7 +187,8 @@ public final class RitiEngine: LekhiEngine {
         if let context, riti_context_ongoing_input_session(context) {
             riti_context_finish_input_session(context)
         }
-        finishPhoneticShadow()
+        typed = ""
+        fed = ""
         clearCandidateState()
     }
 
@@ -161,48 +202,6 @@ public final class RitiEngine: LekhiEngine {
             riti_config_free(config)
             self.config = nil
         }
-        if let phoneticContext {
-            riti_context_free(phoneticContext)
-            self.phoneticContext = nil
-        }
-        if let phoneticConfig {
-            riti_config_free(phoneticConfig)
-            self.phoneticConfig = nil
-        }
-    }
-
-    // MARK: - Phonetic shadow context (.phoneticFirst)
-
-    private func feedPhoneticShadow(keycode: UInt16) {
-        guard let phoneticContext else { return }
-        let raw = riti_get_suggestion_for_key(phoneticContext, keycode, 0, 0)
-        currentPhonetic = lonelyText(of: raw)
-        if let raw { riti_suggestion_free(raw) }
-    }
-
-    private func backspacePhoneticShadow(word: Bool) {
-        guard let phoneticContext else { return }
-        let raw = riti_context_backspace_event(phoneticContext, word)
-        currentPhonetic = lonelyText(of: raw)
-        if let raw { riti_suggestion_free(raw) }
-    }
-
-    private func finishPhoneticShadow() {
-        if let phoneticContext, riti_context_ongoing_input_session(phoneticContext) {
-            riti_context_finish_input_session(phoneticContext)
-        }
-        currentPhonetic = nil
-    }
-
-    private func lonelyText(of raw: OpaquePointer?) -> String? {
-        guard let raw,
-              !riti_suggestion_is_empty(raw),
-              riti_suggestion_is_lonely(raw),
-              let pointer = riti_suggestion_get_lonely_suggestion(raw) else {
-            return nil
-        }
-        defer { riti_string_free(pointer) }
-        return String(cString: pointer)
     }
 
     // MARK: - Suggestion extraction
@@ -275,29 +274,77 @@ public final class RitiEngine: LekhiEngine {
         )
     }
 
+    /// Which candidate the keyboard writes into the document while composing.
+    ///
+    /// riti sorts its list as autocorrect -> emoji -> dictionary -> literal
+    /// phonetic -> typed English, and its own default is the remembered pick
+    /// or index 0. A desktop IME only commits that on space; Lekhi writes the
+    /// selection into the document on every keystroke, so taking index 0
+    /// typed an emoji mid-word whenever the Latin buffer spelled an emoji name
+    /// (`on` -> 🔛, `one` -> 1️⃣). Continuing the word then replaced that emoji
+    /// and, because of how the host deletes emoji, ate the text before it.
+    ///
+    /// - An emoji is never the default. It stays one tap away in the bar.
+    /// - `.phoneticFirst` defaults to the literal transliteration, as the mode
+    ///   promises, unless the user previously picked something for this word.
+    /// - `.smart` keeps riti's ranking, minus the emoji.
     private func defaultIndex(in raw: OpaquePointer, candidates: [String]) -> Int {
+        // riti reports 0 both for "nothing remembered" and for a remembered
+        // pick that happens to rank first, so only a non-zero index is
+        // evidence of an earlier choice.
         let remembered = Int(riti_suggestion_previously_selected_index(raw))
-        if candidates.indices.contains(remembered) {
-            return remembered
-        }
+        let rememberedPick = candidates.indices.contains(remembered)
+            && !Self.isEmoji(candidates[remembered])
+            ? remembered : nil
 
-        if mode == .phoneticFirst, let phonetic = currentPhonetic {
-            if let index = candidates.firstIndex(of: phonetic) {
+        let firstNonEmoji = candidates.firstIndex { !Self.isEmoji($0) } ?? 0
+
+        switch mode {
+        case .phoneticFirst:
+            if let rememberedPick, rememberedPick > 0 {
+                return rememberedPick
+            }
+            if let literal = literalReading(of: raw),
+               let index = candidates.firstIndex(of: literal) {
                 return index
             }
+            return firstNonEmoji
+        case .smart, .phoneticOnly:
+            return rememberedPick ?? firstNonEmoji
         }
-
-        return 0
     }
 
+    /// The plain transliteration of riti's current buffer, rebuilt with the
+    /// same parser riti uses (`avro_phonetic_literal`). Only valid for a full
+    /// suggestion list — riti panics if asked for auxiliary text otherwise.
+    private func literalReading(of raw: OpaquePointer) -> String? {
+        guard let buffer = riti_suggestion_get_auxiliary_text(raw) else { return nil }
+        defer { riti_string_free(buffer) }
+        guard let literal = avro_phonetic_literal(buffer) else { return nil }
+        defer { riti_string_free(literal) }
+        return String(cString: literal)
+    }
+
+    /// Whether a candidate is an emoji rather than text.
+    static func isEmoji(_ candidate: String) -> Bool {
+        candidate.unicodeScalars.contains { scalar in
+            scalar.properties.isEmojiPresentation
+                || scalar.value == 0xFE0F   // variation selector: emoji style
+                || scalar.value == 0x20E3   // combining enclosing keycap
+        }
+    }
+
+    /// Up to three candidates for the bar, default first.
+    ///
+    /// The literal reading usually ranks below riti's first few entries, so
+    /// it used to be squeezed into the last slot behind an emoji. Leading with
+    /// the candidate that is actually in the document matches the design's
+    /// bar, which puts the typed reading in the first cell.
     private func visibleIndices(candidateCount: Int, requiredIndex: Int) -> [Int] {
-        var indices = Array(0..<min(3, candidateCount))
-        if !indices.contains(requiredIndex) {
-            if indices.count == 3 {
-                indices[2] = requiredIndex
-            } else {
-                indices.append(requiredIndex)
-            }
+        var indices = [requiredIndex]
+        for index in 0..<candidateCount where index != requiredIndex {
+            guard indices.count < 3 else { break }
+            indices.append(index)
         }
         return indices
     }
@@ -336,7 +383,15 @@ public final class RitiEngine: LekhiEngine {
     ) -> EngineHandle? {
         guard let config = riti_config_new() else { return nil }
 
-        guard riti_config_set_layout_file(config, layout.ritiLayoutName) else {
+        let layoutPath: String = {
+            if layout == .probhat {
+                return DataPaths.url(for: "probhat.json")?.path
+                    ?? ((databaseDir as NSString).appendingPathComponent("probhat.json"))
+            }
+            return layout.ritiLayoutName
+        }()
+
+        guard riti_config_set_layout_file(config, layoutPath) else {
             riti_config_free(config)
             return nil
         }
@@ -358,4 +413,3 @@ public final class RitiEngine: LekhiEngine {
         return EngineHandle(config: config, context: context)
     }
 }
-

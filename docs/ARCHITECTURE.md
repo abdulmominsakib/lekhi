@@ -26,8 +26,10 @@ from `KeyboardRootView`. On every key tap:
    `KeyRouter.route(action:)`.
 3. `KeyRouter` consults the engine (`RitiEngine`) and the
    `InputSession` (Observable model).
-4. The router returns a `KeyOutcome` — either `.insert(text)`,
-   `.deleteBackward`, `.advanceInputMode`, or `.none`.
+4. The router returns a `KeyOutcome` — either
+   `.replaceComposing(deleteCount:insert:)` (delete the previously
+   inserted Bengali chunk, insert the new transliteration),
+   `.insert(text)`, `.deleteBackward`, `.advanceInputMode`, or `.none`.
 5. The view controller applies the outcome to the text document
    proxy (`textDocumentProxy.insertText`, `deleteBackward`,
    `advanceToNextInputMode`).
@@ -75,28 +77,35 @@ macOS Lekho upstream verbatim:
 | `.phoneticFirst` | one primary context | shows top 3, phonetic pre-selected |
 | `.phoneticOnly` | one phonetic-only context | none, commits inline |
 
-In `.phoneticFirst`, the wrapper selects riti's literal phonetic
-candidate from its ranked output. This keeps the keyboard to one
-engine context while preserving Lekho's phonetic-first behaviour.
+riti ranks its phonetic list with the literal transliteration
+first and reports any remembered user pick through
+`previously_selected_index`, so a single engine context serves all
+three modes.
 
-## App Group + data files
+## Data files
 
-- App Group: `group.com.lekho.ios` (declared in both
-  entitlements files).
-- `DataPaths.ensureDataFilesCopied()` runs on first launch of
-  either target and copies the bundled JSON files into
-  `<AppGroup>/LekhoData/`.
-- The engine reads its dictionary, autocorrect, suffix, and
-  Probhat files from there. The host app's bundled copy is only
-  used as the source for this copy.
+- Both targets embed `dictionary.json`, `autocorrect.json`,
+  `suffix.json` and `probhat.json`, so each reads the engine's
+  database straight out of its own bundle
+  (`DataPaths.databaseDirectory()`). Nothing is copied at launch.
+- riti's writable user directory (remembered candidate
+  selections) lives at `<AppGroup>/RitiUser`, falling back to the
+  target's caches directory when the App Group is unavailable.
+- Earlier builds copied the 4 MB data set into
+  `<AppGroup>/LekhiData` on first launch. That copy was not
+  atomic, and a keyboard extension terminated mid-copy left a
+  truncated `dictionary.json` that was never repaired — the engine
+  then failed to start and the keyboard silently typed Latin
+  letters. `DataPaths.removeLegacyAppGroupCopy()` clears that
+  directory on the host app's next launch.
 
 ## Settings → Extension sync
 
 - Host and extension share `UserDefaults(suiteName:
-  "group.com.lekho.ios")`.
+  "group.com.lekhi.ios")`.
 - When the user toggles a setting in the host app, the host
   posts a Darwin notification
-  (`com.lekho.ios.settingsChanged`).
+  (`com.lekhi.ios.settingsChanged`).
 - The extension listens for this notification and rebuilds the
   engine if mode / layout changed. As a safety net, the
   extension also rebuilds in `viewWillAppear` based on the

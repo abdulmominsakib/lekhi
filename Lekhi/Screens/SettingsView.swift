@@ -16,14 +16,25 @@ struct SettingsView: View {
     @State private var characterPreview: Bool = CharacterPreviewStore.current()
     @State private var typingMode: TypingMode = TypingModeStore.current()
     @State private var layout: Layout = LayoutStore.current()
+    @State private var enabledLayouts: [Layout] = LayoutStore.enabled()
     @State private var bengaliDigits: Bool = BengaliDigitStore.current()
     @State private var spacebarSwipe: Bool = SpacebarSwipeStore.current()
+    @State private var keyHints: Bool = KeyHintStore.current()
     @State private var soundEnabled: Bool = SoundStore.current() != .off
     @State private var hapticsEnabled: Bool = HapticStore.current() != .off
+
+    @State private var fullAccess: FullAccessStatus = FullAccessReporter.current()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
             Form {
+                if !fullAccess.isGranted {
+                    Section {
+                        FullAccessCallout()
+                    }
+                }
+
                 // Feedback & Interaction
                 Section {
                     Toggle("Key Click Sounds", isOn: $soundEnabled)
@@ -69,10 +80,15 @@ struct SettingsView: View {
                         .onChange(of: characterPreview) { _, newValue in
                             CharacterPreviewStore.set(newValue)
                         }
+
+                    Toggle("Bangla Hints on Keycaps", isOn: $keyHints)
+                        .onChange(of: keyHints) { _, newValue in
+                            KeyHintStore.set(newValue)
+                        }
                 } header: {
                     Text("Feedback & Touch")
                 } footer: {
-                    Text("Customize key click sounds, tactile Taptic vibrations, and Apple-style character magnification popups.")
+                    Text("Customize key click sounds, tactile Taptic vibrations, and Apple-style character magnification popups. Turn off keycap hints for bare white keys.")
                 }
 
                 // Keyboard Height Adjustment
@@ -156,29 +172,49 @@ struct SettingsView: View {
                     TypingModeStore.set(newValue)
                 }
 
-                // Phonetic Layout
+                // Keyboard Layouts
                 Section {
-                    Picker("Layout", selection: $layout) {
-                        ForEach(Layout.allCases) { layoutOption in
+                    ForEach(Layout.allCases) { item in
+                        let isOn = enabledLayouts.contains(item)
+                        let isLast = isOn && enabledLayouts.count == 1
+                        Toggle(isOn: Binding(
+                            get: { enabledLayouts.contains(item) },
+                            set: { newValue in
+                                LayoutStore.setEnabled(item, newValue)
+                                enabledLayouts = LayoutStore.enabled()
+                                layout = LayoutStore.current()
+                            }
+                        )) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(layoutOption.displayName)
+                                Text(item.displayName)
                                     .font(.system(size: 15, weight: .medium))
-                                Text(layoutOption.subtitle)
+                                Text(isLast ? "At least one layout has to stay on." : item.subtitle)
                                     .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
                             }
-                            .tag(layoutOption)
                         }
+                        .disabled(isLast)
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
                 } header: {
-                    Text("Phonetic layout")
+                    Text("Keyboard layouts")
                 } footer: {
-                    Text("Avro Phonetic is recommended.")
+                    Text("Swipe the spacebar to move between the layouts you turn on.")
                 }
-                .onChange(of: layout) { _, newValue in
-                    LayoutStore.set(newValue)
+
+                if enabledLayouts.count > 1 {
+                    Section {
+                        Picker("Layout", selection: $layout) {
+                            ForEach(enabledLayouts) { layoutOption in
+                                Text(layoutOption.displayName).tag(layoutOption)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                        .labelsHidden()
+                    } header: {
+                        Text("Current layout")
+                    } footer: {
+                        Text("Avro Phonetic is recommended.")
+                    }
                 }
 
                 // Numbers & Digits
@@ -231,6 +267,20 @@ struct SettingsView: View {
 
                 // About & Diagnostics
                 Section {
+                    EngineStatusRow()
+
+                    LabeledContent {
+                        HStack(spacing: 6) {
+                            Image(systemName: fullAccess.isGranted
+                                  ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(fullAccess.isGranted ? Color.green : Color.orange)
+                            Text(fullAccess.displayName)
+                                .foregroundStyle(.secondary)
+                        }
+                    } label: {
+                        Label("Full Access", systemImage: "hand.raised")
+                    }
+
                     NavigationLink {
                         EngineInfoView()
                     } label: {
@@ -247,14 +297,123 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .onChange(of: layout) { _, newValue in
+                if newValue != LayoutStore.current() { LayoutStore.set(newValue) }
+            }
+            .onAppear(perform: refreshFromStores)
+            // Returning from iOS Settings (e.g. after allowing Full Access)
+            // doesn't re-run `onAppear`.
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { refreshFromStores() }
+            }
+        }
+    }
+
+    /// Re-read every store when the screen comes back.
+    ///
+    /// These `@State` values are seeded once, but the keyboard can change
+    /// settings on its own — a spacebar swipe switches the layout — which left
+    /// the pickers showing a stale selection until the app was relaunched.
+    private func refreshFromStores() {
+        theme = ThemeStore.current()
+        switchSound = SoundStore.current()
+        haptics = HapticStore.current()
+        keyboardHeight = KeyboardHeightStore.current()
+        characterPreview = CharacterPreviewStore.current()
+        typingMode = TypingModeStore.current()
+        layout = LayoutStore.current()
+        enabledLayouts = LayoutStore.enabled()
+        bengaliDigits = BengaliDigitStore.current()
+        spacebarSwipe = SpacebarSwipeStore.current()
+        keyHints = KeyHintStore.current()
+        soundEnabled = switchSound != .off
+        hapticsEnabled = haptics != .off
+        fullAccess = FullAccessReporter.current()
+    }
+}
+
+/// Explains why Lekhi asks for Full Access and how to grant it.
+struct FullAccessCallout: View {
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Allow Full Access for key vibrations", systemImage: "hand.raised.circle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color.orange)
+
+            Text("iOS doesn't let a custom keyboard use the Taptic Engine without Full Access. Typing, suggestions and every setting on this screen work either way — only the vibrations need it.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+
+            Text("Settings → General → Keyboard → Keyboards → Lekhi → Allow Full Access")
+                .font(.system(size: 12, design: .rounded))
+                .foregroundStyle(.secondary)
+
+            Text("Lekhi still makes no network requests and collects nothing — it has no networking code at all.")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                Link(destination: url) {
+                    Label("Open Settings", systemImage: "arrow.up.right.square")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Surfaces whether the transliteration engine actually started.
+///
+/// When engine construction fails the keyboard stays usable but inserts plain
+/// Latin letters, which users report as "phonetic stopped working". Showing
+/// the recorded reason turns a silent, device-specific failure into something
+/// that can be diagnosed.
+struct EngineStatusRow: View {
+
+    @State private var state: EngineState = EngineDiagnostics.current()
+
+    var body: some View {
+        LabeledContent {
+            HStack(spacing: 6) {
+                Image(systemName: state.isHealthy ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(state.isHealthy ? Color.green : Color.orange)
+                Text(state.displayName)
+                    .foregroundStyle(.secondary)
+            }
+        } label: {
+            Label("Engine Status", systemImage: "waveform.badge.magnifyingglass")
+        }
+        .onAppear { state = EngineDiagnostics.current() }
+
+        if let hint = state.recoveryHint, !state.isHealthy {
+            Text(hint)
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
         }
     }
 }
 
 struct EngineInfoView: View {
 
+    @State private var engineState: EngineState = EngineDiagnostics.current()
+
     var body: some View {
         Form {
+            Section {
+                EngineStatusRow()
+                if let updated = EngineDiagnostics.lastUpdated() {
+                    LabeledContent("Last Checked") {
+                        Text(updated, style: .relative) + Text(" ago")
+                    }
+                }
+            } header: {
+                Text("Diagnostics")
+            } footer: {
+                Text("Updated each time the Lekhi keyboard starts up.")
+            }
+
             Section {
                 LabeledContent("App Name") { Text("Lekhi (লেখী)") }
                 LabeledContent("Transliteration Engine") { Text("Riti (Avro Phonetic)") }

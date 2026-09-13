@@ -52,3 +52,49 @@ public func postSettingsChanged() {
         nil, nil, true
     )
 }
+
+// MARK: - Full Access
+
+/// Whether the keyboard extension has been granted "Allow Full Access".
+///
+/// Lekhi asks for it for one reason: iOS does not let a custom keyboard drive
+/// the Taptic Engine without it, so `UIFeedbackGenerator` silently does
+/// nothing. Only the extension can answer the question, so it records the
+/// answer here for the host app's settings screen to read.
+public enum FullAccessStatus: String, Sendable {
+    /// The keyboard has not run since install, so it has not reported yet.
+    case unknown
+    case granted
+    case denied
+
+    public var displayName: String {
+        switch self {
+        case .unknown: return "Not reported yet"
+        case .granted: return "Enabled"
+        case .denied:  return "Not enabled"
+        }
+    }
+
+    public var isGranted: Bool { self == .granted }
+}
+
+public enum FullAccessReporter {
+    private static let key = "LekhiKeyboardFullAccess"
+
+    /// Called by the keyboard extension each time it appears.
+    public static func record(_ granted: Bool) {
+        AppGroup.defaults.set(granted ? FullAccessStatus.granted.rawValue
+                                      : FullAccessStatus.denied.rawValue,
+                              forKey: key)
+    }
+
+    /// Read by the host app. `.unknown` until the keyboard has been opened
+    /// once; the host treats it like `.denied` and offers the same advice.
+    public static func current() -> FullAccessStatus {
+        guard let raw = AppGroup.defaults.string(forKey: key),
+              let status = FullAccessStatus(rawValue: raw) else {
+            return .unknown
+        }
+        return status
+    }
+}

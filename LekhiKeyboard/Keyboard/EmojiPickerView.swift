@@ -13,6 +13,11 @@ public struct EmojiPickerView: View {
     public let palette: KeyboardColorPalette
     public let onInsert: (String) -> Void
     public let onDelete: () -> Void
+    /// Leaves emoji mode. Routed through the keyboard's action pipeline rather
+    /// than flipping `session.isEmojiMode` here, so the view controller gets a
+    /// chance to resize the input view — the candidate bar comes back with the
+    /// letter keys, and the keyboard has to grow by its height again.
+    public let onDismiss: () -> Void
 
     @State private var activeFilter: String = ""
     @State private var selectedCategory: EmojiCategory = .smileys
@@ -37,12 +42,14 @@ public struct EmojiPickerView: View {
         session: InputSession,
         palette: KeyboardColorPalette = Theme.palette,
         onInsert: @escaping (String) -> Void,
-        onDelete: @escaping () -> Void
+        onDelete: @escaping () -> Void,
+        onDismiss: @escaping () -> Void
     ) {
         self.session = session
         self.palette = palette
         self.onInsert = onInsert
         self.onDelete = onDelete
+        self.onDismiss = onDismiss
     }
 
     private var displayedEmojis: [EmojiItem] {
@@ -71,7 +78,14 @@ public struct EmojiPickerView: View {
         .padding(.horizontal, 6)
         .padding(.top, 4)
         .padding(.bottom, Theme.bottomInset)
-        .background(palette.backgroundPlate)
+        // The root view paints the plate (or leaves it to the system
+        // container); a square fill here would bring the edge back.
+    }
+
+    /// Emoji keys were silent — only the mechanical grid played a click.
+    private func feedback(isAction: Bool, isSpace: Bool = false) {
+        MechanicalSoundManager.shared.playKeyPress(isSpace: isSpace, isModifier: isAction)
+        HapticManager.shared.keyPress(isAction: isAction)
     }
 
     // MARK: - Quick Filter Mood Chips
@@ -90,6 +104,7 @@ public struct EmojiPickerView: View {
                             }
                         }
                         HapticManager.shared.candidateSelected()
+                        MechanicalSoundManager.shared.playKeyPress(isModifier: true)
                     } label: {
                         HStack(spacing: 4) {
                             Text(filter.icon)
@@ -125,6 +140,7 @@ public struct EmojiPickerView: View {
                     selectedCategory = cat
                     activeFilter = ""
                     HapticManager.shared.candidateSelected()
+                    MechanicalSoundManager.shared.playKeyPress(isModifier: true)
                 } label: {
                     Text(cat.icon)
                         .font(.system(size: 16))
@@ -161,7 +177,7 @@ public struct EmojiPickerView: View {
                 LazyVGrid(columns: columns, spacing: 6) {
                     ForEach(displayedEmojis) { item in
                         Button {
-                            HapticManager.shared.keyPress(isAction: false)
+                            feedback(isAction: false)
                             onInsert(item.emoji)
                         } label: {
                             Text(item.emoji)
@@ -184,8 +200,8 @@ public struct EmojiPickerView: View {
         HStack(spacing: 8) {
             // ABC button to return to mechanical keyboard
             Button {
-                HapticManager.shared.keyPress(isAction: true)
-                session.isEmojiMode = false
+                feedback(isAction: true)
+                onDismiss()
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "keyboard")
@@ -208,7 +224,7 @@ public struct EmojiPickerView: View {
 
             // Spacebar in emoji mode
             Button {
-                HapticManager.shared.keyPress(isAction: false)
+                feedback(isAction: false, isSpace: true)
                 onInsert(" ")
             } label: {
                 Text("space")
@@ -228,7 +244,7 @@ public struct EmojiPickerView: View {
 
             // Backspace in emoji mode
             Button {
-                HapticManager.shared.keyPress(isAction: true)
+                feedback(isAction: true)
                 onDelete()
             } label: {
                 Image(systemName: "delete.backward")

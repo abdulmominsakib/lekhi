@@ -55,22 +55,4 @@ public enum Layout: String, CaseIterable, Identifiable, Sendable {
             return "Probhat phonetic layout from the data folder."
         }
     }
-
-    /// Next language in the spacebar sliding carousel.
-    public var nextLanguage: Layout {
-        switch self {
-        case .english:      return .avroPhonetic
-        case .avroPhonetic: return .probhat
-        case .probhat:      return .english
-        }
-    }
-
-    /// Previous language in the spacebar sliding carousel.
-    public var previousLanguage: Layout {
-        switch self {
-        case .english:      return .probhat
-        case .avroPhonetic: return .english
-        case .probhat:      return .avroPhonetic
-        }
-    }
 }
