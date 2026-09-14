@@ -464,6 +464,9 @@ final class KeyboardViewController: UIInputViewController {
             onCommitCandidate: { [weak self] index in
                 self?.commitCandidate(at: index)
             },
+            onLongPressCandidate: { [weak self] index in
+                self?.saveCandidateAsFavourite(at: index)
+            },
             onSwipeLanguage: { [weak self] forward in
                 self?.handleSwipeLanguage(forward: forward)
             }
@@ -586,6 +589,26 @@ final class KeyboardViewController: UIInputViewController {
             }
         }
         HapticManager.shared.candidateSelected()
+    }
+
+    /// Long press on a live candidate: add it to the favourites list without
+    /// touching the composition, so the user can keep typing the word.
+    private func saveCandidateAsFavourite(at index: Int) {
+        guard !session.isShowingPinnedKeywords,
+              index >= 0, index < session.candidates.count else { return }
+        let keyword = session.candidates[index]
+
+        let result = PinnedKeywordsStore.add(keyword)
+        session.pinnedKeywords = PinnedKeywordsStore.current()
+        HapticManager.shared.keyPress(isAction: true)
+
+        let notice = InputSession.FavouriteNotice(result: result, keyword: keyword)
+        session.favouriteNotice = notice
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { [weak self] in
+            // A newer long press owns the bar now; let its own timer clear it.
+            guard let self, self.session.favouriteNotice?.id == notice.id else { return }
+            self.session.favouriteNotice = nil
+        }
     }
 
     /// Freeze the composition before an engine/layout transition. With the

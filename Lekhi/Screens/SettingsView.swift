@@ -20,7 +20,7 @@ struct SettingsView: View {
     @State private var bengaliDigits: Bool = BengaliDigitStore.current()
     @State private var spacebarSwipe: Bool = SpacebarSwipeStore.current()
     @State private var keyHints: Bool = KeyHintStore.current()
-    @State private var pinnedKeywords: [String] = PinnedKeywordsStore.editableSlots()
+    @State private var pinnedKeywords: [String] = PinnedKeywordsStore.current()
     @State private var soundEnabled: Bool = SoundStore.current() != .off
     @State private var hapticsEnabled: Bool = HapticStore.current() != .off
 
@@ -244,36 +244,31 @@ struct SettingsView: View {
 
                 // Favourite / pinned keywords
                 Section {
-                    ForEach(0..<PinnedKeywordsStore.maxCount, id: \.self) { index in
-                        TextField(
-                            "Keyword \(index + 1)",
-                            text: Binding(
-                                get: {
-                                    index < pinnedKeywords.count ? pinnedKeywords[index] : ""
-                                },
-                                set: { newValue in
-                                    var next = pinnedKeywords
-                                    while next.count < PinnedKeywordsStore.maxCount {
-                                        next.append("")
+                    NavigationLink {
+                        FavouriteKeywordsView()
+                    } label: {
+                        LabeledContent {
+                            Text("\(pinnedKeywords.count)")
+                        } label: {
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Manage Favourites")
+                                    if !pinnedKeywords.isEmpty {
+                                        Text(pinnedKeywords.prefix(3).joined(separator: " · "))
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
                                     }
-                                    next[index] = newValue
-                                    pinnedKeywords = Array(next.prefix(PinnedKeywordsStore.maxCount))
-                                    PinnedKeywordsStore.set(pinnedKeywords)
                                 }
-                            )
-                        )
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    }
-
-                    Button("Reset to Defaults") {
-                        PinnedKeywordsStore.resetToDefaults()
-                        pinnedKeywords = PinnedKeywordsStore.editableSlots()
+                            } icon: {
+                                Image(systemName: "star")
+                            }
+                        }
                     }
                 } header: {
                     Text("Favourite Keywords")
                 } footer: {
-                    Text("These three words appear in the suggestion bar before you start typing. Tap one on the keyboard to insert it.")
+                    Text("Favourites appear in the suggestion bar before you start typing. Long-press any suggestion on the keyboard to save it, or import and export them as JSON.")
                 }
 
                 // Open Source & Community
@@ -361,7 +356,7 @@ struct SettingsView: View {
         bengaliDigits = BengaliDigitStore.current()
         spacebarSwipe = SpacebarSwipeStore.current()
         keyHints = KeyHintStore.current()
-        pinnedKeywords = PinnedKeywordsStore.editableSlots()
+        pinnedKeywords = PinnedKeywordsStore.current()
         soundEnabled = switchSound != .off
         hapticsEnabled = haptics != .off
         fullAccess = FullAccessReporter.current()

@@ -19,17 +19,20 @@ public struct KeyboardRootView: View {
     @Bindable public var session: InputSession
     public let onAction: (KeyAction) -> Void
     public let onCommitCandidate: (Int) -> Void
+    public let onLongPressCandidate: ((Int) -> Void)?
     public let onSwipeLanguage: ((Bool) -> Void)?
 
     public init(
         session: InputSession,
         onAction: @escaping (KeyAction) -> Void,
         onCommitCandidate: @escaping (Int) -> Void,
+        onLongPressCandidate: ((Int) -> Void)? = nil,
         onSwipeLanguage: ((Bool) -> Void)? = nil
     ) {
         self.session = session
         self.onAction = onAction
         self.onCommitCandidate = onCommitCandidate
+        self.onLongPressCandidate = onLongPressCandidate
         self.onSwipeLanguage = onSwipeLanguage
     }
 
@@ -64,7 +67,8 @@ public struct KeyboardRootView: View {
                 CandidateBar(
                     session: session,
                     palette: palette,
-                    onTap: onCommitCandidate
+                    onTap: onCommitCandidate,
+                    onLongPress: onLongPressCandidate
                 )
                 .frame(height: heightOption.suggestionBarHeight)
             }
@@ -124,6 +128,7 @@ private struct CandidateBar: View {
     @Bindable var session: InputSession
     let palette: KeyboardColorPalette
     let onTap: (Int) -> Void
+    let onLongPress: ((Int) -> Void)?
 
     var body: some View {
         let showingPinned = session.isShowingPinnedKeywords
@@ -132,7 +137,11 @@ private struct CandidateBar: View {
             rawBuffer: showingPinned ? "" : session.buffer,
             selectedIndex: showingPinned ? -1 : session.selectedIndex,
             palette: palette,
-            onTap: onTap
+            notice: session.favouriteNotice,
+            onTap: onTap,
+            // Favourites are already saved; long press only applies to live
+            // candidates.
+            onLongPress: showingPinned ? nil : onLongPress
         )
     }
 }

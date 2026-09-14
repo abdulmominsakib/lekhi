@@ -94,6 +94,10 @@ public final class InputSession {
     /// (before the user starts typing a word).
     public var pinnedKeywords: [String]
 
+    /// Brief confirmation shown in the suggestion bar after a long press
+    /// saves a candidate as a favourite.
+    public var favouriteNotice: FavouriteNotice?
+
     /// Live in-progress pre-edit string (Bengali transliteration).
     public var preEditText: String = ""
 
@@ -136,6 +140,12 @@ public final class InputSession {
         self.spacebarSwipeEnabled = spacebarSwipeEnabled
         self.showKeyHints = showKeyHints
         self.pinnedKeywords = pinnedKeywords
+    }
+
+    public struct FavouriteNotice: Equatable {
+        public let id = UUID()
+        public let result: PinnedKeywordsStore.AddResult
+        public let keyword: String
     }
 
     // MARK: - Mutation helpers
