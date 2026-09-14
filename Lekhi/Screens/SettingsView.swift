@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var bengaliDigits: Bool = BengaliDigitStore.current()
     @State private var spacebarSwipe: Bool = SpacebarSwipeStore.current()
     @State private var keyHints: Bool = KeyHintStore.current()
+    @State private var pinnedKeywords: [String] = PinnedKeywordsStore.editableSlots()
     @State private var soundEnabled: Bool = SoundStore.current() != .off
     @State private var hapticsEnabled: Bool = HapticStore.current() != .off
 
@@ -241,6 +242,40 @@ struct SettingsView: View {
                     Text("Swipe left or right on the spacebar to switch between English, Avro Phonetic, and Probhat layouts.")
                 }
 
+                // Favourite / pinned keywords
+                Section {
+                    ForEach(0..<PinnedKeywordsStore.maxCount, id: \.self) { index in
+                        TextField(
+                            "Keyword \(index + 1)",
+                            text: Binding(
+                                get: {
+                                    index < pinnedKeywords.count ? pinnedKeywords[index] : ""
+                                },
+                                set: { newValue in
+                                    var next = pinnedKeywords
+                                    while next.count < PinnedKeywordsStore.maxCount {
+                                        next.append("")
+                                    }
+                                    next[index] = newValue
+                                    pinnedKeywords = Array(next.prefix(PinnedKeywordsStore.maxCount))
+                                    PinnedKeywordsStore.set(pinnedKeywords)
+                                }
+                            )
+                        )
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    }
+
+                    Button("Reset to Defaults") {
+                        PinnedKeywordsStore.resetToDefaults()
+                        pinnedKeywords = PinnedKeywordsStore.editableSlots()
+                    }
+                } header: {
+                    Text("Favourite Keywords")
+                } footer: {
+                    Text("These three words appear in the suggestion bar before you start typing. Tap one on the keyboard to insert it.")
+                }
+
                 // Open Source & Community
                 Section {
                     if let url = URL(string: "https://github.com/abdulmominsakib/lekhi") {
@@ -326,6 +361,7 @@ struct SettingsView: View {
         bengaliDigits = BengaliDigitStore.current()
         spacebarSwipe = SpacebarSwipeStore.current()
         keyHints = KeyHintStore.current()
+        pinnedKeywords = PinnedKeywordsStore.editableSlots()
         soundEnabled = switchSound != .off
         hapticsEnabled = haptics != .off
         fullAccess = FullAccessReporter.current()

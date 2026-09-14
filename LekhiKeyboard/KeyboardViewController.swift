@@ -125,6 +125,7 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         syncFullAccess()
         syncPreferences()
+        syncHostKeyboardType()
         let newLayout = LayoutStore.current()
         let newMode = TypingModeStore.current()
         updateBackgroundTheme()
@@ -181,6 +182,7 @@ final class KeyboardViewController: UIInputViewController {
         session.showCharacterPreview = CharacterPreviewStore.current()
         session.spacebarSwipeEnabled = SpacebarSwipeStore.current()
         session.showKeyHints = KeyHintStore.current()
+        session.pinnedKeywords = PinnedKeywordsStore.current()
         session.canSwitchLayouts = LayoutStore.enabled().count > 1
         updateGlobeKeyVisibility()
     }
@@ -197,10 +199,27 @@ final class KeyboardViewController: UIInputViewController {
 
     private func updateKeyboardHeightConstraint() {
         guard view.frame.width > 0 else { return }
-        let targetHeight = session.heightOption.totalHeight(
-            showsSuggestionBar: !session.isEmojiMode && session.mode.showsSuggestionBar,
-            safeAreaBottom: view.safeAreaInsets.bottom
-        )
+        let safeBottom = view.safeAreaInsets.bottom
+        let targetHeight: CGFloat
+        if session.isEmojiMode {
+            // Apple emoji keyboard is taller than bare letter keys: search +
+            // four emoji rows + category strip.
+            targetHeight = session.heightOption.emojiPanelHeight(safeAreaBottom: safeBottom)
+        } else {
+            let showsBar = !session.isEmojiSearchActive
+                && !session.hostKeyboardContext.isDigitPad
+                && session.mode.showsSuggestionBar
+            var height = session.heightOption.totalHeight(
+                showsSuggestionBar: showsBar,
+                safeAreaBottom: safeBottom
+            )
+            // Search chrome replaces the suggestion bar and needs room for results.
+            if session.isEmojiSearchActive {
+                let searchChrome = 44 + (96 * session.heightOption.scaleFactor) + 12
+                height += searchChrome
+            }
+            targetHeight = height
+        }
         if let heightConstraint {
             if abs(heightConstraint.constant - targetHeight) > 0.5 {
                 heightConstraint.constant = targetHeight
@@ -211,6 +230,62 @@ final class KeyboardViewController: UIInputViewController {
             constraint.isActive = true
             self.heightConstraint = constraint
         }
+    }
+
+    /// Adapt layout to the host field's keyboard type (numpad, email, etc.).
+    private func syncHostKeyboardType() {
+        let context: HostKeyboardContext = {
+            switch textDocumentProxy.keyboardType {
+            case .numberPad, .asciiCapableNumberPad:
+                return .numberPad
+            case .phonePad:
+                return .phonePad
+            case .decimalPad:
+                return .decimalPad
+            case .numbersAndPunctuation:
+                return .numbersAndPunctuation
+            case .emailAddress:
+                return .email
+            default:
+                return .standard
+            }
+        }()
+
+        let previous = session.hostKeyboardContext
+        guard previous != context else {
+            // Stay locked on the pad / numbers page if the user somehow left it.
+            if context.isDigitPad, !session.isEmojiMode {
+                // Digit pads ignore layoutMode; nothing to force.
+            } else if context == .numbersAndPunctuation,
+                      session.layoutMode == .letters,
+                      !session.isEmojiMode {
+                session.layoutMode = .numbers
+            }
+            return
+        }
+
+        session.hostKeyboardContext = context
+        session.isEmojiMode = false
+        session.clearEmojiSearch()
+
+        switch context {
+        case .numberPad, .phonePad, .decimalPad:
+            session.layoutMode = .numbers
+            if session.hasActiveSession {
+                commitActiveComposition()
+            }
+        case .numbersAndPunctuation:
+            session.layoutMode = .numbers
+            if session.hasActiveSession {
+                commitActiveComposition()
+            }
+        case .email, .standard:
+            if previous.isDigitPad || previous == .numbersAndPunctuation {
+                session.layoutMode = .letters
+            }
+        }
+
+        updateKeyboardHeightConstraint()
     }
 
     private func observeAppearanceChanges() {
@@ -357,6 +432,7 @@ final class KeyboardViewController: UIInputViewController {
         session.showCharacterPreview = CharacterPreviewStore.current()
         session.spacebarSwipeEnabled = SpacebarSwipeStore.current()
         session.showKeyHints = KeyHintStore.current()
+        session.pinnedKeywords = PinnedKeywordsStore.current()
         session.canSwitchLayouts = LayoutStore.enabled().count > 1
 
         if newLayout != session.layout || newMode != session.mode {
@@ -466,6 +542,16 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func commitCandidate(at index: Int) {
+        // Idle bar shows pinned favourites — tap inserts them directly.
+        if session.isShowingPinnedKeywords {
+            guard index >= 0, index < session.pinnedKeywords.count else { return }
+            let chosen = session.pinnedKeywords[index]
+            guard !chosen.isEmpty else { return }
+            textDocumentProxy.insertText(chosen)
+            HapticManager.shared.candidateSelected()
+            return
+        }
+
         guard session.hasActiveSession else { return }
         guard index >= 0, index < session.candidates.count else { return }
 
@@ -546,6 +632,7 @@ final class KeyboardViewController: UIInputViewController {
     override func textDidChange(_ textInput: (any UITextInput)?) {
         super.textDidChange(textInput)
         updateBackgroundTheme()
+        syncHostKeyboardType()
         reconcileExternalChange()
     }
 

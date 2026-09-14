@@ -94,6 +94,52 @@ public enum KeyboardHeightOption: String, CaseIterable, Identifiable, Sendable {
         (keyBodyHeight * 4) + (rowSpacing * 3)
     }
 
+    // MARK: - Emoji panel (Apple-like: 4 visible rows)
+
+    /// Columns across the emoji grid (Apple uses ~8 on iPhone).
+    public var emojiColumnCount: Int { 8 }
+
+    /// Visible emoji rows in the first viewport (Apple shows four).
+    public var emojiVisibleRowCount: Int { 4 }
+
+    /// Glyph size inside each cell.
+    public var emojiFontSize: CGFloat {
+        Self.halfPoint(34 * scaleFactor)
+    }
+
+    /// Fixed row height so four rows fill the viewport cleanly.
+    public var emojiRowHeight: CGFloat {
+        Self.halfPoint(48 * scaleFactor)
+    }
+
+    public var emojiRowSpacing: CGFloat {
+        Self.halfPoint(2 * scaleFactor)
+    }
+
+    /// Exact height of the scroll viewport for four emoji rows.
+    public var emojiGridViewportHeight: CGFloat {
+        let rows = CGFloat(emojiVisibleRowCount)
+        return (emojiRowHeight * rows) + (emojiRowSpacing * (rows - 1))
+    }
+
+    public var emojiSearchBarHeight: CGFloat {
+        Self.halfPoint(40 * max(0.95, scaleFactor))
+    }
+
+    public var emojiCategoryBarHeight: CGFloat {
+        Self.halfPoint(40 * max(0.95, scaleFactor))
+    }
+
+    /// Full emoji keyboard height: search + 4-row grid + category strip.
+    public func emojiPanelHeight(safeAreaBottom: CGFloat = 0) -> CGFloat {
+        let chromeSpacing: CGFloat = 12 // search↔grid↔category gaps + outer padding
+        return emojiSearchBarHeight
+            + emojiGridViewportHeight
+            + emojiCategoryBarHeight
+            + chromeSpacing
+            + safeAreaBottom
+    }
+
     /// Height to request for the input view.
     ///
     /// The candidate bar is only drawn in modes that have candidates, so it

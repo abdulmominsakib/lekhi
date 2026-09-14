@@ -45,6 +45,8 @@
 		1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
 		1A00000000000000000000CE /* KeyboardHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CE /* KeyboardHeight.swift */; };
 		1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CF /* CharacterPreviewStore.swift */; };
+		1A00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D0 /* EmojiRecentsStore.swift */; };
+		1A00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D6 /* PinnedKeywordsStore.swift */; };
 		1A00000000000000000000D1 /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
 		1A00000000000000000000D2 /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
 		1A00000000000000000000D3 /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
@@ -80,6 +82,8 @@
 		1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CD /* EnglishSuggestionService.swift */; };
 		1B00000000000000000000CE /* KeyboardHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CE /* KeyboardHeight.swift */; };
 		1B00000000000000000000CF /* CharacterPreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CF /* CharacterPreviewStore.swift */; };
+		1B00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D0 /* EmojiRecentsStore.swift */; };
+		1B00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D6 /* PinnedKeywordsStore.swift */; };
 		7C4740F7303DEED90022E80F /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
 		7C4740F8303DEED90022E80F /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
 		7C4740F9303DEED90022E80F /* suffix.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D3 /* suffix.json */; };
@@ -149,6 +153,8 @@
 		2A00000000000000000000CD /* EnglishSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnglishSuggestionService.swift; sourceTree = "<group>"; };
 		2A00000000000000000000CE /* KeyboardHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeight.swift; sourceTree = "<group>"; };
 		2A00000000000000000000CF /* CharacterPreviewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterPreviewStore.swift; sourceTree = "<group>"; };
+		2A00000000000000000000D0 /* EmojiRecentsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiRecentsStore.swift; sourceTree = "<group>"; };
+		2A00000000000000000000D6 /* PinnedKeywordsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedKeywordsStore.swift; sourceTree = "<group>"; };
 		2A00000000000000000000D1 /* dictionary.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dictionary.json; sourceTree = "<group>"; };
 		2A00000000000000000000D2 /* autocorrect.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = autocorrect.json; sourceTree = "<group>"; };
 		2A00000000000000000000D3 /* suffix.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = suffix.json; sourceTree = "<group>"; };
@@ -296,6 +302,8 @@
 				2A00000000000000000000CD /* EnglishSuggestionService.swift */,
 				2A00000000000000000000CE /* KeyboardHeight.swift */,
 				2A00000000000000000000CF /* CharacterPreviewStore.swift */,
+				2A00000000000000000000D0 /* EmojiRecentsStore.swift */,
+				2A00000000000000000000D6 /* PinnedKeywordsStore.swift */,
 				5G00000000000000000000C1 /* Transliteration */,
 			);
 			path = SharedKit;
@@ -471,6 +479,8 @@
 				1A00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
 				1A00000000000000000000CE /* KeyboardHeight.swift in Sources */,
 				1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
+				1A00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */,
+				1A00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,6 +516,8 @@
 				1B00000000000000000000CD /* EnglishSuggestionService.swift in Sources */,
 				1B00000000000000000000CE /* KeyboardHeight.swift in Sources */,
 				1B00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
+				1B00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */,
+				1B00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,7 +655,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 15;
+		"CURRENT_PROJECT_VERSION" = 18;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -673,7 +685,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 15;
+		"CURRENT_PROJECT_VERSION" = 18;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -701,7 +713,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 15;
+		"CURRENT_PROJECT_VERSION" = 18;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -727,7 +739,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 15;
+		"CURRENT_PROJECT_VERSION" = 18;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";

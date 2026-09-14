@@ -50,9 +50,26 @@ public final class InputSession {
     public var layoutMode: KeyboardLayoutMode = .letters
     public var isEmojiMode: Bool = false
 
+    /// Host field keyboard type (number pad, email, etc.).
+    public var hostKeyboardContext: HostKeyboardContext = .standard
+
+    /// Host field needs ASCII digits (number/phone/decimal/numbersAndPunctuation).
+    public var isNumericHostField: Bool {
+        hostKeyboardContext.forcesASCIIDigits
+    }
+
+    /// User is typing a query for emoji search (letter keys feed `emojiSearchQuery`).
+    public var isEmojiSearchActive: Bool = false
+    public var emojiSearchQuery: String = ""
+
     public var isSymbolMode: Bool {
         get { layoutMode != .letters }
         set { layoutMode = newValue ? .numbers : .letters }
+    }
+
+    public func clearEmojiSearch() {
+        isEmojiSearchActive = false
+        emojiSearchQuery = ""
     }
 
     /// Whether more than one layout is turned on, i.e. whether a spacebar
@@ -73,6 +90,10 @@ public final class InputSession {
     /// Up to three visible candidates.
     public var candidates: [String] = []
 
+    /// Favourite keywords shown in the suggestion bar while idle
+    /// (before the user starts typing a word).
+    public var pinnedKeywords: [String]
+
     /// Live in-progress pre-edit string (Bengali transliteration).
     public var preEditText: String = ""
 
@@ -84,6 +105,12 @@ public final class InputSession {
 
     /// Raw typed characters in current buffer.
     public var buffer: String = ""
+
+    /// True when the suggestion bar should show pinned favourites instead
+    /// of live candidates — nothing typed yet, no composition in flight.
+    public var isShowingPinnedKeywords: Bool {
+        buffer.isEmpty && !hasActiveSession
+    }
 
     /// Exact Bengali chunk currently inserted in the host document for the
     /// active composition. Direct-commit model: the host document is the
@@ -98,7 +125,8 @@ public final class InputSession {
         heightOption: KeyboardHeightOption = KeyboardHeightStore.current(),
         showCharacterPreview: Bool = CharacterPreviewStore.current(),
         spacebarSwipeEnabled: Bool = SpacebarSwipeStore.current(),
-        showKeyHints: Bool = KeyHintStore.current()
+        showKeyHints: Bool = KeyHintStore.current(),
+        pinnedKeywords: [String] = PinnedKeywordsStore.current()
     ) {
         self.layout = layout
         self.mode = mode
@@ -107,6 +135,7 @@ public final class InputSession {
         self.showCharacterPreview = showCharacterPreview
         self.spacebarSwipeEnabled = spacebarSwipeEnabled
         self.showKeyHints = showKeyHints
+        self.pinnedKeywords = pinnedKeywords
     }
 
     // MARK: - Mutation helpers

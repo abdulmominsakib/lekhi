@@ -54,7 +54,10 @@ public struct KeyboardRootView: View {
 
     public var body: some View {
         let heightOption = session.heightOption
-        let showsBar = !session.isEmojiMode && session.mode.showsSuggestionBar
+        let showsBar = !session.isEmojiMode
+            && !session.isEmojiSearchActive
+            && !session.hostKeyboardContext.isDigitPad
+            && session.mode.showsSuggestionBar
 
         VStack(spacing: 0) {
             if showsBar {
@@ -74,9 +77,20 @@ public struct KeyboardRootView: View {
                     onDelete: { onAction(.backspace(word: false)) },
                     onDismiss: { onAction(.emoji) }
                 )
-                .padding(.top, heightOption.topPadding)
                 .transition(.opacity)
             } else {
+                if session.isEmojiSearchActive {
+                    EmojiSearchHeaderView(
+                        session: session,
+                        palette: palette,
+                        onInsert: { text in onAction(.insertText(text)) },
+                        onCancel: {
+                            session.clearEmojiSearch()
+                            onAction(.emoji)
+                        }
+                    )
+                }
+
                 KeyboardGrid(
                     session: session,
                     palette: palette,
@@ -100,6 +114,7 @@ public struct KeyboardRootView: View {
         .clipShape(plateShape)
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.18), value: session.isEmojiMode)
+        .animation(.easeInOut(duration: 0.18), value: session.isEmojiSearchActive)
     }
 }
 
@@ -111,10 +126,11 @@ private struct CandidateBar: View {
     let onTap: (Int) -> Void
 
     var body: some View {
+        let showingPinned = session.isShowingPinnedKeywords
         SuggestionBarView(
-            candidates: session.candidates,
-            rawBuffer: session.buffer,
-            selectedIndex: session.selectedIndex,
+            candidates: showingPinned ? session.pinnedKeywords : session.candidates,
+            rawBuffer: showingPinned ? "" : session.buffer,
+            selectedIndex: showingPinned ? -1 : session.selectedIndex,
             palette: palette,
             onTap: onTap
         )
@@ -142,15 +158,27 @@ private struct KeyboardGrid: View {
         let showsGlobeKey = session.showsGlobeKey
 
         let rows: [KeyRow] = {
+            let host = session.hostKeyboardContext
+            if host.isDigitPad {
+                return KeyboardLayoutFactory.digitPad(
+                    style: host,
+                    layout: layout,
+                    showsGlobeKey: showsGlobeKey
+                )
+            }
             switch layoutMode {
             case .letters:
                 return KeyboardLayoutFactory.letters(
                     isShifted: isShifted || isCapsLocked,
                     layout: layout,
-                    showsGlobeKey: showsGlobeKey
+                    showsGlobeKey: showsGlobeKey,
+                    hostContext: host
                 )
             case .numbers:
-                return KeyboardLayoutFactory.numbers(showsGlobeKey: showsGlobeKey)
+                return KeyboardLayoutFactory.numbers(
+                    showsGlobeKey: showsGlobeKey,
+                    layout: layout
+                )
             case .symbols:
                 return KeyboardLayoutFactory.symbols(showsGlobeKey: showsGlobeKey)
             }

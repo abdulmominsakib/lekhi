@@ -150,6 +150,29 @@ public final class KeyRouter {
             return .insert(String(c))
         }
 
+        // Emoji search: letter keys feed the query, not the host field.
+        if session.isEmojiSearchActive {
+            if c.isNewline {
+                return .none
+            }
+            session.emojiSearchQuery.append(c)
+            consumeShift(session)
+            return .none
+        }
+
+        // Numeric host fields always need ASCII digits (and decimal punctuation).
+        if session.isNumericHostField {
+            if session.hasActiveSession {
+                if session.layout == .english {
+                    session.resetComposing()
+                } else {
+                    commitAndFinish()
+                }
+            }
+            consumeShift(session)
+            return .insert(String(c))
+        }
+
         // English layout typing: generate live English suggestions
         if session.layout == .english {
             if c.isLetter || c.isNumber || c == "'" {
@@ -234,6 +257,15 @@ public final class KeyRouter {
     private func handleBackspace(word: Bool) -> KeyOutcome {
         guard let session else { return .deleteBackward }
 
+        if session.isEmojiSearchActive {
+            if word {
+                session.emojiSearchQuery = ""
+            } else if !session.emojiSearchQuery.isEmpty {
+                session.emojiSearchQuery.removeLast()
+            }
+            return .none
+        }
+
         if session.layout == .english {
             if word {
                 session.resetComposing()
@@ -291,11 +323,19 @@ public final class KeyRouter {
     }
 
     private func handleSpace() -> KeyOutcome {
+        if session?.isEmojiSearchActive == true {
+            session?.emojiSearchQuery.append(" ")
+            return .none
+        }
         finishCompositionBeforeSeparator()
         return .insert(" ")
     }
 
     private func handleReturn() -> KeyOutcome {
+        if session?.isEmojiSearchActive == true {
+            // Keep searching; return does not insert a newline into the host.
+            return .none
+        }
         finishCompositionBeforeSeparator()
         return .insert("\n")
     }
@@ -343,6 +383,8 @@ public final class KeyRouter {
 
     private func handleLayoutToggle() {
         guard let session else { return }
+        // System digit pads have no ABC / 123 toggle.
+        guard !session.hostKeyboardContext.isDigitPad else { return }
         if session.layoutMode == .letters {
             session.layoutMode = .numbers
         } else {
@@ -352,6 +394,7 @@ public final class KeyRouter {
 
     private func handleSymbolsToggle() {
         guard let session else { return }
+        guard !session.hostKeyboardContext.isDigitPad else { return }
         if session.layoutMode == .numbers {
             session.layoutMode = .symbols
         } else {
@@ -360,7 +403,15 @@ public final class KeyRouter {
     }
 
     private func handleEmojiToggle() {
-        session?.isEmojiMode.toggle()
+        guard let session else { return }
+        guard !session.hostKeyboardContext.isDigitPad else { return }
+        if session.isEmojiMode {
+            session.isEmojiMode = false
+        } else {
+            // Entering the emoji panel from letters or emoji-search.
+            session.clearEmojiSearch()
+            session.isEmojiMode = true
+        }
     }
 
     public func resolveCurrentCandidate() -> String {
