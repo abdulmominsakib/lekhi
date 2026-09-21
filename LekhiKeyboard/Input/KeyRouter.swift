@@ -118,6 +118,16 @@ public final class KeyRouter {
 
     @discardableResult
     public func route(_ action: KeyAction) -> KeyOutcome {
+        // Caps lock latches on two *consecutive* shift taps, like the system
+        // keyboard: anything struck in between closes the window. Without this
+        // the window was simply "two shift taps inside 0.35 s", which a fast
+        // typist hits by accident — shift, letter, shift is under 0.35 s from
+        // roughly 70 WPM — and in Avro phonetic a stuck caps lock silently
+        // changes every following letter (`s` -> স but `S` -> শ).
+        if action != .shift {
+            lastShiftTap = nil
+        }
+
         switch action {
         case .character(let c):        return handleCharacter(c)
         case .insertText(let s):       return handleInsertText(s)
@@ -352,7 +362,8 @@ public final class KeyRouter {
     }
 
     /// Tapping shift toggles it for one character; tapping it again inside
-    /// the double-tap window latches caps lock, matching the system keyboard.
+    /// the double-tap window, with nothing struck in between, latches caps
+    /// lock, matching the system keyboard.
     /// Without this there was no way to type two capitals in a row, which
     /// matters in Avro phonetic where case selects a different letter
     /// (`s` -> স but `S` -> শ).

@@ -491,6 +491,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func handleSwipeLanguage(forward: Bool) {
+        retractSpacebarSpace()
         guard LayoutStore.neighbour(of: session.layout, forward: forward) != session.layout else { return }
         commitActiveComposition()
         session.cycleLanguage(forward: forward)
@@ -498,7 +499,39 @@ final class KeyboardViewController: UIInputViewController {
         HapticManager.shared.candidateSelected()
     }
 
+    /// Take back the space the spacebar emitted on touch-down, now that the
+    /// press has turned out to be a language swipe.
+    ///
+    /// Decided from the keyboard's own record rather than by looking for a
+    /// trailing space in `documentContextBeforeInput`: the proxy has not
+    /// necessarily caught up with an insert this recent, so reading it would
+    /// leave the stray space behind on exactly the slower hosts where the
+    /// swipe is most awkward already.
+    private func retractSpacebarSpace() {
+        guard spacebarSpaceIsRetractable else { return }
+        spacebarSpaceIsRetractable = false
+        isDispatching = true
+        defer { isDispatching = false }
+        textDocumentProxy.deleteBackward()
+    }
+
     private var isDispatching = false
+
+    /// What the word being composed has already put in the document, so a
+    /// change callback that arrives late — after the next keystroke has moved
+    /// the composition on — is recognised as ours instead of being mistaken
+    /// for the host rewriting the text. See `ComposingHistory`.
+    private var composingHistory = ComposingHistory()
+
+    /// True while the space emitted by the current spacebar touch-down can
+    /// still be taken back, i.e. until anything else touches the document.
+    private var spacebarSpaceIsRetractable = false
+
+    /// Clear the composition, and with it the record of what it displayed.
+    private func resetComposing() {
+        session.resetComposing()
+        composingHistory.reset()
+    }
 
     // MARK: - Action dispatch
 
@@ -537,6 +570,13 @@ final class KeyboardViewController: UIInputViewController {
             break
         }
 
+        // The spacebar emits on touch-down, before the keyboard can know
+        // whether the finger is going to travel on into a language swipe, so
+        // that space stays retractable until anything else edits the document.
+        spacebarSpaceIsRetractable = (action == .space && outcome == .insert(" "))
+
+        composingHistory.record(session.committedBengali)
+
         if case .emoji = action {
             // The candidate bar disappears in emoji mode, so the input view
             // needs to shrink with it.
@@ -545,16 +585,55 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func commitCandidate(at index: Int) {
-        // Idle bar shows pinned favourites — tap inserts them directly.
+        // Anything else reaching the document ends the window in which the
+        // spacebar's touch-down space can still be taken back.
+        spacebarSpaceIsRetractable = false
+
+        // Idle bar shows the favourites for the active layout — tap inserts
+        // them directly.
         if session.isShowingPinnedKeywords {
-            guard index >= 0, index < session.pinnedKeywords.count else { return }
-            let chosen = session.pinnedKeywords[index]
+            let idle = session.idleCandidates
+            guard index >= 0, index < idle.count else { return }
+            let chosen = idle[index]
             guard !chosen.isEmpty else { return }
             textDocumentProxy.insertText(chosen)
             HapticManager.shared.candidateSelected()
             return
         }
 
+        switch session.barChoice(at: index) {
+        case .savedWord(let phrase):
+            commitSavedWord(phrase)
+        case .engineCandidate(let engineIndex):
+            commitEngineCandidate(at: engineIndex)
+        case nil:
+            return
+        }
+    }
+
+    /// Tapping a saved-keyword completion swaps the word being composed for
+    /// the full phrase. The engine session is closed without teaching riti a
+    /// candidate — the user picked their own phrase, not one of its readings.
+    private func commitSavedWord(_ phrase: String) {
+        guard !phrase.isEmpty else { return }
+
+        isDispatching = true
+        defer { isDispatching = false }
+
+        engineLoader?.engineIfLoaded()?.finishSession()
+        let old = session.layout == .english ? session.buffer : session.committedBengali
+        resetComposing()
+
+        if phrase != old {
+            for _ in 0..<DocumentEdit.deletionSteps(for: old) {
+                textDocumentProxy.deleteBackward()
+            }
+            textDocumentProxy.insertText(phrase)
+        }
+        HapticManager.shared.candidateSelected()
+    }
+
+    private func commitEngineCandidate(at index: Int) {
         guard session.hasActiveSession else { return }
         guard index >= 0, index < session.candidates.count else { return }
 
@@ -568,7 +647,7 @@ final class KeyboardViewController: UIInputViewController {
                 textDocumentProxy.deleteBackward()
             }
             textDocumentProxy.insertText(chosen + " ")
-            session.resetComposing()
+            resetComposing()
             HapticManager.shared.candidateSelected()
             return
         }
@@ -579,7 +658,7 @@ final class KeyboardViewController: UIInputViewController {
         // The live composing chunk is already in the document via
         // direct-commit: swap it for the picked candidate, then freeze.
         let old = session.committedBengali
-        session.resetComposing()
+        resetComposing()
         if chosen != old {
             for _ in 0..<DocumentEdit.deletionSteps(for: old) {
                 textDocumentProxy.deleteBackward()
@@ -595,8 +674,10 @@ final class KeyboardViewController: UIInputViewController {
     /// touching the composition, so the user can keep typing the word.
     private func saveCandidateAsFavourite(at index: Int) {
         guard !session.isShowingPinnedKeywords,
-              index >= 0, index < session.candidates.count else { return }
-        let keyword = session.candidates[index]
+              let choice = session.barChoice(at: index),
+              case .engineCandidate(let engineIndex) = choice,
+              engineIndex < session.candidates.count else { return }
+        let keyword = session.candidates[engineIndex]
 
         let result = PinnedKeywordsStore.add(keyword)
         session.pinnedKeywords = PinnedKeywordsStore.current()
@@ -620,14 +701,14 @@ final class KeyboardViewController: UIInputViewController {
 
         guard session.hasActiveSession else {
             engine?.finishSession()
-            session.resetComposing()
+            resetComposing()
             return
         }
 
         // English input is inserted directly on every keypress; its candidate
         // state is advisory only, so there is nothing to commit here.
         if session.layout == .english {
-            session.resetComposing()
+            resetComposing()
             return
         }
 
@@ -642,12 +723,12 @@ final class KeyboardViewController: UIInputViewController {
         if session.committedBengali.isEmpty, !chosen.isEmpty {
             textDocumentProxy.insertText(chosen)
         }
-        session.resetComposing()
+        resetComposing()
     }
 
     private func discardStaleCompositionState() {
         engineLoader?.engineIfLoaded()?.finishSession()
-        session.resetComposing()
+        resetComposing()
     }
 
     // MARK: - Text-document callbacks
@@ -688,6 +769,11 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         if before.hasSuffix(session.committedBengali) {
+            return
+        }
+        // An earlier shape of the same word: this is one of our own edits that
+        // the host has not finished reporting, not the host rewriting the text.
+        if composingHistory.recognises(before) {
             return
         }
         // Cursor moved elsewhere, context unavailable (secure field), or the

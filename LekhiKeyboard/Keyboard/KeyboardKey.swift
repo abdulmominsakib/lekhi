@@ -30,12 +30,19 @@ public struct KeyboardKey: View {
     /// iOS clips a keyboard extension to its own bounds, so the preview
     /// balloon must not rise further than this.
     public let popupHeadroom: CGFloat
+    /// Fired when a spacebar drag crosses the language-switch threshold.
+    /// The press has already emitted its space on touch-down by then, so the
+    /// handler is responsible for retracting that space before it switches
+    /// layouts.
     public let onSwipeLanguage: ((Bool) -> Void)?
     public let onPress: () -> Void
 
     @State private var isPressed: Bool = false
     @State private var dragOffset: CGFloat = 0
     @State private var hasSwiped: Bool = false
+    /// Which way the finger was moving when the language flip fired, so the
+    /// incoming label slides in from the side it came from.
+    @State private var swipeForward: Bool = true
     @State private var repeatTask: Task<Void, Never>?
 
     public init(
@@ -76,6 +83,18 @@ public struct KeyboardKey: View {
 
     private var shouldShowCharacterPreview: Bool {
         showsCharacterPreview && descriptor.kind == .letter && descriptor.label.count <= 2
+    }
+
+    /// How far the spacebar drag has travelled into a language swipe, 0…1.
+    /// Ramped from a small dead zone so a tap or a jittery press leaves the
+    /// label alone, and reaching full emphasis right where the swipe fires
+    /// (55 pt) so the label is already lit when the layout actually flips.
+    private var languageSwipeProgress: CGFloat {
+        guard descriptor.kind.isSpace, spacebarSwipeEnabled,
+              isPressed || dragOffset != 0 else { return 0 }
+        let deadZone: CGFloat = 10
+        let switchPoint: CGFloat = 55
+        return min(max((abs(dragOffset) - deadZone) / (switchPoint - deadZone), 0), 1)
     }
 
     /// Backspace and the spacebar auto-repeat while held, exactly like the
@@ -137,10 +156,18 @@ public struct KeyboardKey: View {
                 if !isPressed {
                     isPressed = true
                     triggerFeedback()
-                    if !descriptor.kind.isSpace {
-                        onPress()
-                        startRepeatIfNeeded()
-                    }
+                    // Every key, the spacebar included, emits on touch-down so
+                    // that what reaches the document is ordered by the order
+                    // the keys were struck in. The spacebar used to emit on
+                    // touch-up, which reordered fast typing: roll a finger off
+                    // space onto the next letter and the letter's touch-down
+                    // beats space's touch-up, so "ami bangla" arrived as
+                    // a-m-i-b-space — riti composed the stray "b" into "amib"
+                    // and the space landed after the wrong word. A drag that
+                    // turns into a language swipe retracts this space through
+                    // `onSwipeLanguage`.
+                    onPress()
+                    startRepeatIfNeeded()
                 }
 
                 if descriptor.kind.isSpace && spacebarSwipeEnabled && onSwipeLanguage != nil {
@@ -152,21 +179,24 @@ public struct KeyboardKey: View {
                     // can't fire by accident mid-sentence.
                     if !hasSwiped && horizontalDrag > 55 && horizontalDrag > verticalDrag * 1.4 {
                         hasSwiped = true
+                        swipeForward = value.translation.width > 0
                         HapticManager.shared.candidateSelected()
-                        onSwipeLanguage?(value.translation.width > 0)
+                        onSwipeLanguage?(swipeForward)
                     }
                 }
             }
             .onEnded { _ in
                 cancelRepeat()
-                if descriptor.kind.isSpace && !hasSwiped {
-                    onPress()
-                }
                 withAnimation(.easeOut(duration: 0.08)) {
                     isPressed = false
                 }
+                // Settle the label back to rest on a spring so a swipe that
+                // stopped short of the switch point eases home instead of
+                // snapping.
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    dragOffset = 0
+                }
                 hasSwiped = false
-                dragOffset = 0
             }
     }
 
@@ -177,6 +207,9 @@ public struct KeyboardKey: View {
             // Same cadence as the system keyboard: a pause, then ~15/s.
             try? await Task.sleep(nanoseconds: 500_000_000)
             while !Task.isCancelled {
+                // A cancelled gesture does not reliably deliver `onEnded`, and
+                // a repeat that outlives the press keeps deleting on its own.
+                guard isPressed else { break }
                 onPress()
                 HapticManager.shared.keyPress(isAction: true)
                 try? await Task.sleep(nanoseconds: 65_000_000)
@@ -311,25 +344,46 @@ public struct KeyboardKey: View {
     @ViewBuilder
     private func spacebarGlyph(fg: Color) -> some View {
         // The design's spacebar carries no label at all. Lekhi needs one so
-        // the active layout is visible, so it is drawn as quietly as possible.
+        // the active layout is visible, so it is drawn as quietly as possible —
+        // until a swipe begins, when it grows, lifts and brightens so the
+        // layout being moved to is the thing the eye lands on.
         if let label = spacebarLabel, !label.isEmpty {
+            let progress = languageSwipeProgress
+
             HStack(spacing: 5) {
                 if spacebarSwipeEnabled {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 7, weight: .semibold))
-                        .foregroundStyle(fg.opacity(0.28))
+                        .foregroundStyle(fg.opacity(0.28 * (1 - progress)))
                 }
 
                 Text(label)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(fg.opacity(0.55))
+                    .foregroundStyle(fg.opacity(0.55 + (0.45 * progress)))
+                    .offset(y: -4 * progress)
+                    .modifier(SwipeLabelFont(
+                        size: 12 + (5 * progress),
+                        weight: progress > 0.4 ? .medium : .regular
+                    ))
+                    // Re-insert on every language change so the old name
+                    // leaves with the finger and the new one follows it in,
+                    // instead of the glyphs swapping in place.
+                    .id(label)
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: swipeForward ? .leading : .trailing)
+                                .combined(with: .opacity),
+                            removal: .move(edge: swipeForward ? .trailing : .leading)
+                                .combined(with: .opacity)
+                        )
+                    )
 
                 if spacebarSwipeEnabled {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 7, weight: .semibold))
-                        .foregroundStyle(fg.opacity(0.28))
+                        .foregroundStyle(fg.opacity(0.28 * (1 - progress)))
                 }
             }
+            .animation(.easeOut(duration: 0.18), value: label)
         } else {
             Text("space")
                 .font(.system(size: 12, weight: .regular))
@@ -381,5 +435,23 @@ public struct KeyboardKey: View {
             isModifier: descriptor.kind.isAction
         )
         HapticManager.shared.keyPress(isAction: descriptor.kind.isAction)
+    }
+}
+
+/// Drives the spacebar label's type size through animatable data. `Text` does
+/// not interpolate `.font` changes on its own, so a swipe that stops short of
+/// the switch point would otherwise snap the label back to its resting size
+/// instead of easing home with the spring.
+private struct SwipeLabelFont: ViewModifier, Animatable {
+    var size: CGFloat
+    var weight: Font.Weight
+
+    var animatableData: CGFloat {
+        get { size }
+        set { size = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: size, weight: weight))
     }
 }

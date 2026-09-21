@@ -268,7 +268,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Favourite Keywords")
                 } footer: {
-                    Text("Favourites appear in the suggestion bar before you start typing. Long-press any suggestion on the keyboard to save it, or import and export them as JSON.")
+                    Text("Favourites appear in the suggestion bar before you start typing, and complete what you type when they match. Long-press any suggestion on the keyboard to save it, or import and export them as JSON.")
                 }
 
                 // Open Source & Community

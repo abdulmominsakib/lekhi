@@ -90,6 +90,43 @@ public final class InputSession {
     /// Up to three visible candidates.
     public var candidates: [String] = []
 
+    /// Saved favourites that complete the word being composed, in favourites
+    /// order. Shown ahead of the engine's candidates so a phrase the user saved
+    /// ("আসসালামু আলাইকুম") is one tap away once its beginning is typed.
+    public var savedWordMatches: [String] {
+        let typed: String
+        if layout == .english {
+            typed = buffer
+        } else if !committedBengali.isEmpty {
+            typed = committedBengali
+        } else {
+            typed = preEditText
+        }
+        return PinnedKeywordsStore.completions(of: typed, in: pinnedKeywords)
+    }
+
+    /// The full list the suggestion bar shows while composing: saved-keyword
+    /// completions first, then the engine's candidates.
+    public var barCandidates: [String] {
+        savedWordMatches + candidates
+    }
+
+    /// Where a suggestion-bar tap lands: a saved keyword, or an index into the
+    /// engine's `candidates` (the index `engine.commitCandidate` expects).
+    public enum BarChoice: Equatable {
+        case savedWord(String)
+        case engineCandidate(Int)
+    }
+
+    public func barChoice(at index: Int) -> BarChoice? {
+        guard index >= 0 else { return nil }
+        let matches = savedWordMatches
+        if index < matches.count { return .savedWord(matches[index]) }
+        let engineIndex = index - matches.count
+        guard engineIndex < candidates.count else { return nil }
+        return .engineCandidate(engineIndex)
+    }
+
     /// Favourite keywords shown in the suggestion bar while idle
     /// (before the user starts typing a word).
     public var pinnedKeywords: [String]
@@ -114,6 +151,33 @@ public final class InputSession {
     /// of live candidates — nothing typed yet, no composition in flight.
     public var isShowingPinnedKeywords: Bool {
         buffer.isEmpty && !hasActiveSession
+    }
+
+    /// What the bar offers while idle, before anything is typed.
+    ///
+    /// Favourites lead on every layout, but the English layout has no use for
+    /// Bengali script — tapping one would drop Bengali into an English
+    /// sentence — so English shows only its Latin favourites and, until there
+    /// are enough of those to fill the bar, common English words behind them.
+    public var idleCandidates: [String] {
+        guard layout == .english else { return pinnedKeywords }
+
+        let english = pinnedKeywords.filter { !Self.usesBengaliScript($0) }
+        guard english.count < 3 else { return english }
+
+        var result = english
+        for word in EnglishSuggestionService.idleWords {
+            guard result.count < 3 else { break }
+            guard !result.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) else { continue }
+            result.append(word)
+        }
+        return result
+    }
+
+    /// Whether a keyword needs Bengali script. A mixed keyword counts as
+    /// Bengali, so English mode never surfaces one.
+    private static func usesBengaliScript(_ keyword: String) -> Bool {
+        keyword.unicodeScalars.contains { (0x0980...0x09FF).contains($0.value) }
     }
 
     /// Exact Bengali chunk currently inserted in the host document for the

@@ -29,6 +29,10 @@
 		1A00000000000000000000B9 /* InputSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B9 /* InputSession.swift */; };
 		1A00000000000000000000BA /* KeyRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BA /* KeyRouter.swift */; };
 		1A00000000000000000000BB /* BengaliDigitInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BB /* BengaliDigitInput.swift */; };
+		1A00000000000000000000BD /* ComposingHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BD /* ComposingHistory.swift */; };
+		1B00000000000000000000BD /* ComposingHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BD /* ComposingHistory.swift */; };
+		1C00000000000000000000F1 /* TypingRig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F1 /* TypingRig.swift */; };
+		1C00000000000000000000F2 /* FastTypingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F2 /* FastTypingTests.swift */; };
 		1A00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
 		1A00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
 		1A00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
@@ -99,6 +103,13 @@
 			remoteGlobalIDString = 6T00000000000000000000B1;
 			remoteInfo = LekhiKeyboard;
 		};
+		9T00000000000000000000F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7P00000000000000000000A1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6T00000000000000000000A1;
+			remoteInfo = Lekhi;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -138,6 +149,10 @@
 		2A00000000000000000000B9 /* InputSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSession.swift; sourceTree = "<group>"; };
 		2A00000000000000000000BA /* KeyRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyRouter.swift; sourceTree = "<group>"; };
 		2A00000000000000000000BB /* BengaliDigitInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BengaliDigitInput.swift; sourceTree = "<group>"; };
+		2A00000000000000000000BD /* ComposingHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposingHistory.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F1 /* TypingRig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingRig.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F2 /* FastTypingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastTypingTests.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F0 /* LekhiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LekhiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A00000000000000000000BC /* EmojiPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerView.swift; sourceTree = "<group>"; };
 		2A00000000000000000000C0 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		2A00000000000000000000C1 /* DataPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataPaths.swift; sourceTree = "<group>"; };
@@ -188,6 +203,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4F00000000000000000000F1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -197,6 +219,7 @@
 				5G00000000000000000000A2 /* Lekhi */,
 				5G00000000000000000000B1 /* LekhiKeyboard */,
 				5G00000000000000000000C0 /* SharedKit */,
+				5G00000000000000000000F0 /* LekhiTests */,
 				5G00000000000000000000D0 /* Frameworks */,
 				5G00000000000000000000E0 /* Products */,
 			);
@@ -284,6 +307,7 @@
 				2A00000000000000000000B9 /* InputSession.swift */,
 				2A00000000000000000000BA /* KeyRouter.swift */,
 				2A00000000000000000000BB /* BengaliDigitInput.swift */,
+				2A00000000000000000000BD /* ComposingHistory.swift */,
 			);
 			path = Input;
 			sourceTree = "<group>";
@@ -321,6 +345,15 @@
 			path = Transliteration;
 			sourceTree = "<group>";
 		};
+		5G00000000000000000000F0 /* LekhiTests */ = {
+			isa = PBXGroup;
+			children = (
+				2A00000000000000000000F1 /* TypingRig.swift */,
+				2A00000000000000000000F2 /* FastTypingTests.swift */,
+			);
+			path = LekhiTests;
+			sourceTree = "<group>";
+		};
 		5G00000000000000000000D0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -334,6 +367,7 @@
 			children = (
 				2A00000000000000000000E6 /* Lekhi.app */,
 				2A00000000000000000000E1 /* LekhiKeyboard.appex */,
+				2A00000000000000000000F0 /* LekhiTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -377,6 +411,23 @@
 			productReference = 2A00000000000000000000E1 /* LekhiKeyboard.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		6T00000000000000000000F1 /* LekhiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C00000000000000000000F1 /* Build configuration list for PBXNativeTarget "LekhiTests" */;
+			buildPhases = (
+				8P00000000000000000000F1 /* Sources */,
+				4F00000000000000000000F1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9D00000000000000000000F1 /* PBXTargetDependency */,
+			);
+			name = LekhiTests;
+			productName = LekhiTests;
+			productReference = 2A00000000000000000000F0 /* LekhiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -392,6 +443,10 @@
 					};
 					6T00000000000000000000B1 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					6T00000000000000000000F1 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 6T00000000000000000000A1;
 					};
 				};
 			};
@@ -410,6 +465,7 @@
 			targets = (
 				6T00000000000000000000A1 /* Lekhi */,
 				6T00000000000000000000B1 /* LekhiKeyboard */,
+				6T00000000000000000000F1 /* LekhiTests */,
 			);
 		};
 /* End PBXProject section */
@@ -466,6 +522,7 @@
 				1A00000000000000000000B9 /* InputSession.swift in Sources */,
 				1A00000000000000000000BA /* KeyRouter.swift in Sources */,
 				1A00000000000000000000BB /* BengaliDigitInput.swift in Sources */,
+				1A00000000000000000000BD /* ComposingHistory.swift in Sources */,
 				1A00000000000000000000C0 /* AppGroup.swift in Sources */,
 				1A00000000000000000000C1 /* DataPaths.swift in Sources */,
 				1A00000000000000000000C2 /* Layout.swift in Sources */,
@@ -503,6 +560,7 @@
 				1B00000000000000000000B9 /* InputSession.swift in Sources */,
 				1B00000000000000000000BA /* KeyRouter.swift in Sources */,
 				1B00000000000000000000BB /* BengaliDigitInput.swift in Sources */,
+				1B00000000000000000000BD /* ComposingHistory.swift in Sources */,
 				1B00000000000000000000BC /* EmojiPickerView.swift in Sources */,
 				1B00000000000000000000C0 /* AppGroup.swift in Sources */,
 				1B00000000000000000000C1 /* DataPaths.swift in Sources */,
@@ -525,6 +583,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8P00000000000000000000F1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C00000000000000000000F1 /* TypingRig.swift in Sources */,
+				1C00000000000000000000F2 /* FastTypingTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -532,6 +599,11 @@
 			isa = PBXTargetDependency;
 			target = 6T00000000000000000000B1 /* LekhiKeyboard */;
 			targetProxy = 9T00000000000000000000B1 /* PBXContainerItemProxy */;
+		};
+		9D00000000000000000000F1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6T00000000000000000000A1 /* Lekhi */;
+			targetProxy = 9T00000000000000000000F1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -571,6 +643,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -659,7 +732,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 20;
+		"CURRENT_PROJECT_VERSION" = 26;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -689,7 +762,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 20;
+		"CURRENT_PROJECT_VERSION" = 26;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -717,7 +790,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 20;
+		"CURRENT_PROJECT_VERSION" = 26;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -743,7 +816,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 20;
+		"CURRENT_PROJECT_VERSION" = 26;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -761,6 +834,50 @@
 		"SWIFT_EMIT_LOC_STRINGS" = YES;
 		"SWIFT_VERSION" = "5.0";
 		"TARGETED_DEVICE_FAMILY" = 1;
+	};
+	isa = XCBuildConfiguration;
+	name = Release;
+};
+		7B00000000000000000000F1 /* Debug */ = {
+	buildSettings = {
+		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
+		"BUNDLE_LOADER" = "$(TEST_HOST)";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 1;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"GENERATE_INFOPLIST_FILE" = YES;
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app.tests";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+		"SUPPORTS_MACCATALYST" = NO;
+		"SWIFT_EMIT_LOC_STRINGS" = NO;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = 1;
+		"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/Lekhi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Lekhi";
+	};
+	isa = XCBuildConfiguration;
+	name = Debug;
+};
+		7B00000000000000000000F2 /* Release */ = {
+	buildSettings = {
+		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
+		"BUNDLE_LOADER" = "$(TEST_HOST)";
+		"CODE_SIGN_STYLE" = Automatic;
+		"CURRENT_PROJECT_VERSION" = 1;
+		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
+		"GENERATE_INFOPLIST_FILE" = YES;
+		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
+		"MARKETING_VERSION" = "1.0";
+		"PRODUCT_BUNDLE_IDENTIFIER" = "com.lekhi.ios.app.tests";
+		"PRODUCT_NAME" = "$(TARGET_NAME)";
+		"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
+		"SUPPORTS_MACCATALYST" = NO;
+		"SWIFT_EMIT_LOC_STRINGS" = NO;
+		"SWIFT_VERSION" = "5.0";
+		"TARGETED_DEVICE_FAMILY" = 1;
+		"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/Lekhi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Lekhi";
 	};
 	isa = XCBuildConfiguration;
 	name = Release;
@@ -785,6 +902,15 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		7C00000000000000000000F1 /* Build configuration list for PBXNativeTarget "LekhiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B00000000000000000000F1 /* Debug */,
+				7B00000000000000000000F2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 		7C00000000000000000000P1 /* Build configuration list for PBXProject "Lekhi" */ = {
 			isa = XCConfigurationList;

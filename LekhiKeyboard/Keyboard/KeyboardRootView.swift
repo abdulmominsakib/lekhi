@@ -132,10 +132,15 @@ private struct CandidateBar: View {
 
     var body: some View {
         let showingPinned = session.isShowingPinnedKeywords
+        // Saved-word completions sit ahead of the engine's candidates, so the
+        // engine's selection has to shift by however many are showing.
+        let matchCount = showingPinned ? 0 : session.savedWordMatches.count
         SuggestionBarView(
-            candidates: showingPinned ? session.pinnedKeywords : session.candidates,
+            candidates: showingPinned ? session.idleCandidates : session.barCandidates,
             rawBuffer: showingPinned ? "" : session.buffer,
-            selectedIndex: showingPinned ? -1 : session.selectedIndex,
+            selectedIndex: showingPinned || session.selectedIndex < 0
+                ? -1
+                : session.selectedIndex + matchCount,
             palette: palette,
             notice: session.favouriteNotice,
             onTap: onTap,

@@ -67,6 +67,22 @@ public enum PinnedKeywordsStore {
         set(defaults)
     }
 
+    /// Saved keywords that complete `typed`: longer words that start with it,
+    /// in favourites order. An exact hit is skipped — the engine already offers
+    /// the word itself, so repeating it in the bar would only take a slot.
+    public static func completions(of typed: String, in keywords: [String], limit: Int = 3) -> [String] {
+        let needle = typed.lowercased()
+        guard !needle.isEmpty, limit > 0 else { return [] }
+        var result: [String] = []
+        for keyword in keywords {
+            guard keyword.count > typed.count,
+                  keyword.lowercased().hasPrefix(needle) else { continue }
+            result.append(keyword)
+            if result.count == limit { break }
+        }
+        return result
+    }
+
     /// Trimmed keyword, or `nil` when it is empty or too long to be a keyword.
     public static func normalized(_ keyword: String) -> String? {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)

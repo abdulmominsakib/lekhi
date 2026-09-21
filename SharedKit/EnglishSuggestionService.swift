@@ -73,6 +73,10 @@ public enum EnglishSuggestionService {
         return target.lowercased()
     }
 
+    /// Words the suggestion bar offers while idle on the English layout, until
+    /// the user has saved enough English favourites of their own to fill it.
+    public static let idleWords: [String] = ["I", "you", "thanks"]
+
     private static let commonEnglishWords: [String] = [
         "the", "be", "to", "of", "and", "a", "in", "that", "have", "I",
         "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",

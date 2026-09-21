@@ -1,5 +1,23 @@
 # Testing
 
+## Unit tests
+
+`LekhiTests` drives the real input path — `KeyRouter`, `InputSession`,
+`ComposingHistory` — with no pause between key strikes, which is the
+condition the fast-typing bugs needed. It runs on a simulator because the
+transliteration engine ships as an iOS-only xcframework.
+
+```bash
+xcodebuild test -project Lekhi.xcodeproj -scheme Lekhi -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+`LekhiTests/TypingRig.swift` holds the harness: a fake host document that
+applies exactly the edits `KeyboardViewController.dispatch` applies to
+`UITextDocumentProxy`, and a deterministic stand-in for riti so the
+assertions do not depend on the 150 000-word dictionary. One `strike` is one
+finger landing on one key, so a test can write rollover — the space finger
+still down as the next letter lands — as the order strikes are made in.
+
 ## Build
 
 ```bash

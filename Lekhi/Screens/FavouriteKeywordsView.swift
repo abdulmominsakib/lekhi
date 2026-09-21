@@ -96,7 +96,7 @@ struct FavouriteKeywordsView: View {
             } header: {
                 Text("Favourites (\(keywords.count))")
             } footer: {
-                Text("The first three appear in the suggestion bar before you start typing; swipe the bar to reach the rest. Tap a keyword to edit it, or use Edit to reorder.")
+                Text("The first three appear in the suggestion bar before you start typing, and matching favourites are suggested as you type. Swipe the bar to reach the rest. Tap a keyword to edit it, or use Edit to reorder.")
             }
 
             Section {

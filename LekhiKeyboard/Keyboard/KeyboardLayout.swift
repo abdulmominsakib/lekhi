@@ -236,7 +236,23 @@ public enum KeyboardLayoutFactory {
                 action: .character(action)
             )
         })
-        let row2 = letterRow(rowId: "numbers-row-1", letters: "-/:;()$&@\"", shifted: false)
+        let row2 = KeyRow(
+            id: "numbers-row-1",
+            keys: letterRow(rowId: "numbers-row-1", letters: "-/:;()$&@\"", shifted: false)
+                .keys
+                .map { key in
+                    // Avro spells the visarga with `:`, but a Bengali typist
+                    // reaching for that key wants the sign itself — দুঃখিত,
+                    // not দু:খিত. English keeps the ASCII colon.
+                    guard layout != .english, key.label == ":" else { return key }
+                    return KeyDescriptor(
+                        id: key.id,
+                        label: "ঃ",
+                        kind: .letter,
+                        action: .character("ঃ")
+                    )
+                }
+        )
         let row3 = KeyRow(id: "numbers-row-2", keys: [
             KeyDescriptor(id: "num-sym-toggle", label: "#+=", kind: .action, action: .switchSymbols, widthWeight: 2.6),
             KeyDescriptor(id: "num-dot", label: ".", kind: .letter, action: .character(".")),
