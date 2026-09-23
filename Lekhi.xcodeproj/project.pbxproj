@@ -33,6 +33,8 @@
 		1B00000000000000000000BD /* ComposingHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BD /* ComposingHistory.swift */; };
 		1C00000000000000000000F1 /* TypingRig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F1 /* TypingRig.swift */; };
 		1C00000000000000000000F2 /* FastTypingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F2 /* FastTypingTests.swift */; };
+		1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F3 /* CompositionIntegrityTests.swift */; };
+		1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F4 /* CheatSheetTests.swift */; };
 		1A00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
 		1A00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
 		1A00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
@@ -152,6 +154,8 @@
 		2A00000000000000000000BD /* ComposingHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposingHistory.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F1 /* TypingRig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingRig.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F2 /* FastTypingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastTypingTests.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F3 /* CompositionIntegrityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositionIntegrityTests.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F4 /* CheatSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheatSheetTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F0 /* LekhiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LekhiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A00000000000000000000BC /* EmojiPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerView.swift; sourceTree = "<group>"; };
 		2A00000000000000000000C0 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -350,6 +354,8 @@
 			children = (
 				2A00000000000000000000F1 /* TypingRig.swift */,
 				2A00000000000000000000F2 /* FastTypingTests.swift */,
+				2A00000000000000000000F3 /* CompositionIntegrityTests.swift */,
+				2A00000000000000000000F4 /* CheatSheetTests.swift */,
 			);
 			path = LekhiTests;
 			sourceTree = "<group>";
@@ -589,6 +595,8 @@
 			files = (
 				1C00000000000000000000F1 /* TypingRig.swift in Sources */,
 				1C00000000000000000000F2 /* FastTypingTests.swift in Sources */,
+				1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */,
+				1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -732,7 +740,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 26;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -762,7 +770,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 26;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -790,7 +798,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 26;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -816,7 +824,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 26;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -843,7 +851,7 @@
 		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
 		"BUNDLE_LOADER" = "$(TEST_HOST)";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 1;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = YES;
 		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
@@ -865,7 +873,7 @@
 		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
 		"BUNDLE_LOADER" = "$(TEST_HOST)";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 1;
+		"CURRENT_PROJECT_VERSION" = 28;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = YES;
 		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";

@@ -20,9 +20,9 @@ struct CheatSheetView: View {
     @State private var searchText = ""
     @State private var selectedCategory: String = "All"
 
-    private let categories = ["All", "Vowels (স্বরবর্ণ)", "Consonants (ব্যঞ্জনবর্ণ)", "Vowel Signs (কার)", "Conjuncts (যুক্তবর্ণ)", "Numbers (সংখ্যা)"]
+    static let categories = ["All", "Vowels (স্বরবর্ণ)", "Consonants (ব্যঞ্জনবর্ণ)", "Vowel Signs (কার)", "Conjuncts (যুক্তবর্ণ)", "Numbers (সংখ্যা)"]
 
-    private let entries: [CheatEntry] = [
+    static let entries: [CheatEntry] = [
         // Vowels
         CheatEntry(latin: "o", bangla: "অ", category: "Vowels (স্বরবর্ণ)", tip: "Default vowel sound"),
         CheatEntry(latin: "a / A", bangla: "আ", category: "Vowels (স্বরবর্ণ)", tip: "A"),
@@ -117,7 +117,8 @@ struct CheatSheetView: View {
         CheatEntry(latin: "Ngg", bangla: "ঙ্গ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঙ + গ — oNggo → অঙ্গ"),
         CheatEntry(latin: "rr", bangla: "র্", category: "Conjuncts (যুক্তবর্ণ)", tip: "Reph — korrmo → কর্ম"),
         CheatEntry(latin: "rri", bangla: "ঋ / ৃ", category: "Conjuncts (যুক্তবর্ণ)", tip: "rriN → ঋণ, brritto → বৃত্ত"),
-        CheatEntry(latin: "w", bangla: "্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "Bo-fola — SaSwoto → শাশ্বত"),
+        CheatEntry(latin: "hs", bangla: "্\u{200C}", category: "Conjuncts (যুক্তবর্ণ)", tip: "Hasanta — shows the sign and keeps the letters apart: allahhs → আল্লাহ্\u{200C}. To JOIN two consonants use a fola instead: swamee → স্বামী, not s + hs + b"),
+        CheatEntry(latin: "w", bangla: "্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "Bo-fola — joins onto the consonant before it: swamee → স্বামী, SaSwoto → শাশ্বত"),
         CheatEntry(latin: "y / z / Z", bangla: "্য", category: "Conjuncts (যুক্তবর্ণ)", tip: "Jo-fola after a consonant — bzbohar → ব্যবহার"),
 
         // Numbers
@@ -134,7 +135,7 @@ struct CheatSheetView: View {
     ]
 
     var filteredEntries: [CheatEntry] {
-        entries.filter { entry in
+        Self.entries.filter { entry in
             let matchesCategory = selectedCategory == "All" || entry.category == selectedCategory
             if searchText.isEmpty {
                 return matchesCategory
@@ -201,7 +202,7 @@ struct CheatSheetView: View {
     private var categoryPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(categories, id: \.self) { cat in
+                ForEach(Self.categories, id: \.self) { cat in
                     Button {
                         selectedCategory = cat
                     } label: {

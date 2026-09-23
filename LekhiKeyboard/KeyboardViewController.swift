@@ -147,6 +147,8 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        pendingReconcile?.cancel()
+        pendingReconcile = nil
         commitActiveComposition()
     }
 
@@ -510,6 +512,7 @@ final class KeyboardViewController: UIInputViewController {
     private func retractSpacebarSpace() {
         guard spacebarSpaceIsRetractable else { return }
         spacebarSpaceIsRetractable = false
+        noteSelfEdit()
         isDispatching = true
         defer { isDispatching = false }
         textDocumentProxy.deleteBackward()
@@ -527,6 +530,30 @@ final class KeyboardViewController: UIInputViewController {
     /// still be taken back, i.e. until anything else touches the document.
     private var spacebarSpaceIsRetractable = false
 
+    /// Bumped by every edit the keyboard makes, so a second look that was
+    /// scheduled earlier can tell that typing carried on without it.
+    private var selfEditGeneration = 0
+    private var lastSelfEditAt: Date = .distantPast
+    private var pendingReconcile: DispatchWorkItem?
+
+    /// How long the host is given to catch up before a context that still
+    /// disagrees is believed.
+    private static let reconcileSettleDelay: TimeInterval = 0.15
+
+    /// How long the keyboard must have been idle before a keystroke is allowed
+    /// to resolve a pending second look on the spot rather than cancel it.
+    private static let reconcileIdleThreshold: TimeInterval = 0.4
+
+    /// Record that the keyboard itself just changed the document, and drop any
+    /// second look that was waiting: it was asked about a document this edit
+    /// has already moved past.
+    private func noteSelfEdit() {
+        selfEditGeneration &+= 1
+        lastSelfEditAt = Date()
+        pendingReconcile?.cancel()
+        pendingReconcile = nil
+    }
+
     /// Clear the composition, and with it the record of what it displayed.
     private func resetComposing() {
         session.resetComposing()
@@ -536,6 +563,16 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Action dispatch
 
     private func dispatch(action: KeyAction) {
+        // A second look is still waiting and the keyboard has been idle: the
+        // change it was asked about cannot be our edits in flight, so it is the
+        // user having moved somewhere else. Settle it before this keystroke
+        // computes a deletion against a cursor that has moved.
+        if pendingReconcile != nil,
+           Date().timeIntervalSince(lastSelfEditAt) > Self.reconcileIdleThreshold {
+            resolveReconcileNow()
+        }
+        noteSelfEdit()
+
         isDispatching = true
         defer { isDispatching = false }
 
@@ -585,6 +622,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func commitCandidate(at index: Int) {
+        noteSelfEdit()
+
         // Anything else reaching the document ends the window in which the
         // spacebar's touch-down space can still be taken back.
         spacebarSpaceIsRetractable = false
@@ -727,6 +766,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func discardStaleCompositionState() {
+        pendingReconcile?.cancel()
+        pendingReconcile = nil
         engineLoader?.engineIfLoaded()?.finishSession()
         resetComposing()
     }
@@ -768,17 +809,58 @@ final class KeyboardViewController: UIInputViewController {
         guard let before = textDocumentProxy.documentContextBeforeInput else {
             return
         }
-        if before.hasSuffix(session.committedBengali) {
+        if contextIsOurs(before) {
             return
         }
-        // An earlier shape of the same word: this is one of our own edits that
-        // the host has not finished reporting, not the host rewriting the text.
-        if composingHistory.recognises(before) {
-            return
+        // Not recognised — but a mismatch on its own is not evidence of
+        // anything. `documentContextBeforeInput` trails the keyboard's own
+        // edits, and at the start of a word there is nothing of that word in it
+        // to match at all, so the first letter of every word mismatched
+        // whenever the host was a beat behind. Discarding there tore the
+        // composition down mid-word, which is precisely what turns `bangla`
+        // into "বআংলা" and stops `স্ব` ever forming: riti only builds a
+        // conjunct out of consonants it sees inside a single session.
+        //
+        // So ask again once the host has gone quiet.
+        scheduleReconcileConfirmation()
+    }
+
+    /// Whether a reported context ends with something this keyboard put there.
+    private func contextIsOurs(_ context: String) -> Bool {
+        if context.hasSuffix(session.committedBengali) { return true }
+        return composingHistory.recognises(context)
+    }
+
+    /// Look again after the host has had time to catch up. Any edit of our own
+    /// in the meantime cancels the check — during a burst of typing it
+    /// therefore never runs, which is the whole point.
+    private func scheduleReconcileConfirmation() {
+        pendingReconcile?.cancel()
+        let generation = selfEditGeneration
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.pendingReconcile = nil
+            guard generation == self.selfEditGeneration else { return }
+            self.resolveReconcileNow()
         }
-        // Cursor moved elsewhere, context unavailable (secure field), or the
-        // host rewrote the text: never delete across the new cursor. The
-        // already-inserted word stays as-is; the next keystroke starts fresh.
+        pendingReconcile = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.reconcileSettleDelay, execute: work)
+    }
+
+    /// The second look. Only a context that still disagrees once the host is
+    /// quiet counts as the cursor having moved, the host having rewritten the
+    /// text, or dictation having taken over.
+    private func resolveReconcileNow() {
+        pendingReconcile?.cancel()
+        pendingReconcile = nil
+
+        guard !isDispatching, session.hasActiveSession else { return }
+        guard !session.committedBengali.isEmpty else { return }
+        guard let settled = textDocumentProxy.documentContextBeforeInput else { return }
+        guard !contextIsOurs(settled) else { return }
+
+        // Never delete across the new cursor. The already-inserted word stays
+        // as-is; the next keystroke starts a fresh composition.
         discardStaleCompositionState()
     }
 }
