@@ -35,6 +35,7 @@
 		1C00000000000000000000F2 /* FastTypingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F2 /* FastTypingTests.swift */; };
 		1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F3 /* CompositionIntegrityTests.swift */; };
 		1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F4 /* CheatSheetTests.swift */; };
+		1C00000000000000000000F5 /* RidmikConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F5 /* RidmikConformanceTests.swift */; };
 		1A00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
 		1A00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
 		1A00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
@@ -156,6 +157,7 @@
 		2A00000000000000000000F2 /* FastTypingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FastTypingTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F3 /* CompositionIntegrityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositionIntegrityTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F4 /* CheatSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheatSheetTests.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F5 /* RidmikConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidmikConformanceTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F0 /* LekhiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LekhiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A00000000000000000000BC /* EmojiPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerView.swift; sourceTree = "<group>"; };
 		2A00000000000000000000C0 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -356,6 +358,7 @@
 				2A00000000000000000000F2 /* FastTypingTests.swift */,
 				2A00000000000000000000F3 /* CompositionIntegrityTests.swift */,
 				2A00000000000000000000F4 /* CheatSheetTests.swift */,
+				2A00000000000000000000F5 /* RidmikConformanceTests.swift */,
 			);
 			path = LekhiTests;
 			sourceTree = "<group>";
@@ -597,6 +600,7 @@
 				1C00000000000000000000F2 /* FastTypingTests.swift in Sources */,
 				1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */,
 				1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */,
+				1C00000000000000000000F5 /* RidmikConformanceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

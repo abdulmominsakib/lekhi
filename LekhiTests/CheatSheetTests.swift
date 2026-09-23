@@ -14,7 +14,7 @@ final class CheatSheetTests: XCTestCase {
     /// Spellings that only take their documented shape after a consonant —
     /// the folas and the reph. On their own they mean something else, so each
     /// is checked through the worked example its own tip gives.
-    private static let contextualSpellings: Set<String> = ["w", "y", "z", "rr", "rri"]
+    private static let contextualSpellings: Set<String> = ["w", "y", "z", "rr", "rri", "r"]
 
     private static let workedExamples: [(latin: String, expected: String)] = [
         ("SaSwoto", "শাশ্বত"),      // w — bo-fola
@@ -25,7 +25,13 @@ final class CheatSheetTests: XCTestCase {
         ("oNggo", "অঙ্গ"),
         ("bOIShNb", "বৈষ্ণব"),
         ("lokkhNOU", "লক্ষ্ণৌ"),
-        ("swamee", "স্বামী")
+        ("swamee", "স্বামী"),
+        ("swamI", "স্বামী"),         // w — the tip's example
+        ("promaN", "প্রমাণ"),        // r — ro-fola
+        ("shwashwoto", "শ্বাশ্বত"),
+        ("bybohar", "ব্যবহার"),      // y — jo-fola
+        ("oZanimeshon", "অ্যানিমেশন"), // Z after a vowel
+        ("allahhs", "আল্লাহ্\u{200C}") // hs — hasanta
     ]
 
     private func makeEngine() throws -> LekhiEngine {
@@ -44,13 +50,15 @@ final class CheatSheetTests: XCTestCase {
         return last
     }
 
-    /// Every conjunct the sheet documents standalone must actually come out of
-    /// the engine — as the default reading, or at least offered in the bar.
-    func testDocumentedConjunctsMatchTheEngine() throws {
+    /// Every entry the sheet documents standalone — in every section, not just
+    /// the conjuncts — must actually come out of the engine, as the default
+    /// reading or at least offered in the bar. Checking only the conjuncts is
+    /// how "`:` -> ঃ" sat in the sheet while the engine rejected `:` outright.
+    func testEveryDocumentedEntryMatchesTheEngine() throws {
         let engine = try makeEngine()
         defer { engine.teardown() }
 
-        for entry in CheatSheetView.entries where entry.category.hasPrefix("Conjuncts") {
+        for entry in CheatSheetView.entries {
             let spellings = entry.latin
                 .split(separator: "/")
                 .map { $0.trimmingCharacters(in: .whitespaces) }

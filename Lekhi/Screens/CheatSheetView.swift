@@ -20,7 +20,7 @@ struct CheatSheetView: View {
     @State private var searchText = ""
     @State private var selectedCategory: String = "All"
 
-    static let categories = ["All", "Vowels (স্বরবর্ণ)", "Consonants (ব্যঞ্জনবর্ণ)", "Vowel Signs (কার)", "Conjuncts (যুক্তবর্ণ)", "Numbers (সংখ্যা)"]
+    static let categories = ["All", "Vowels (স্বরবর্ণ)", "Consonants (ব্যঞ্জনবর্ণ)", "Vowel Signs (কার)", "Folas & Signs (ফলা ও চিহ্ন)", "Conjuncts (যুক্তবর্ণ)", "Numbers (সংখ্যা)"]
 
     static let entries: [CheatEntry] = [
         // Vowels
@@ -74,9 +74,8 @@ struct CheatSheetView: View {
         CheatEntry(latin: "Y", bangla: "য়", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Ontostho ya — or y after a vowel (bhoy → ভয়)"),
         CheatEntry(latin: "TH / t``", bangla: "ৎ", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Khanda ta — hoTaTH → হটাৎ"),
         CheatEntry(latin: "ng", bangla: "ং", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Anusvara"),
-        CheatEntry(latin: ":", bangla: "ঃ", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Bisarga"),
+        CheatEntry(latin: ":", bangla: "ঃ", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Bisarga — the ঃ key on the 123 page, where the colon sits. The word keeps going through it: du + ঃ + kho → দুঃখ"),
         CheatEntry(latin: "qq / ^", bangla: "ঁ", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Chandrabindu — caqqd → চাঁদ"),
-        CheatEntry(latin: "hs / ,,", bangla: "্", category: "Consonants (ব্যঞ্জনবর্ণ)", tip: "Hasanta at the end of a word — allahhs → আল্লাহ্"),
 
         // Vowel Signs
         CheatEntry(latin: "ka", bangla: "কা", category: "Vowel Signs (কার)", tip: "A-kar (া)"),
@@ -92,7 +91,7 @@ struct CheatSheetView: View {
 
         // Conjuncts
         CheatEntry(latin: "kkh / kSh", bangla: "ক্ষ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + ষ"),
-        CheatEntry(latin: "gg", bangla: "জ্ঞ", category: "Conjuncts (যুক্তবর্ণ)", tip: "জ + ঞ"),
+        CheatEntry(latin: "gg / jNG", bangla: "জ্ঞ", category: "Conjuncts (যুক্তবর্ণ)", tip: "জ + ঞ"),
         CheatEntry(latin: "kk", bangla: "ক্ক", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + ক"),
         CheatEntry(latin: "kt", bangla: "ক্ত", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + ত"),
         CheatEntry(latin: "cch", bangla: "চ্ছ", category: "Conjuncts (যুক্তবর্ণ)", tip: "চ + ছ"),
@@ -112,16 +111,62 @@ struct CheatSheetView: View {
         CheatEntry(latin: "hm", bangla: "হ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "হ + ম"),
         CheatEntry(latin: "kkhN", bangla: "ক্ষ্ণ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক্ষ + ণ — lokkhNOU → লক্ষ্ণৌ"),
         CheatEntry(latin: "NGc / nc", bangla: "ঞ্চ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঞ + চ"),
-        CheatEntry(latin: "nj", bangla: "ঞ্জ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঞ + জ"),
+        CheatEntry(latin: "nj / NGj", bangla: "ঞ্জ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঞ + জ"),
         CheatEntry(latin: "ShN", bangla: "ষ্ণ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + ণ — bOIShNb → বৈষ্ণব"),
         CheatEntry(latin: "Ngg", bangla: "ঙ্গ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঙ + গ — oNggo → অঙ্গ"),
-        CheatEntry(latin: "rr", bangla: "র্", category: "Conjuncts (যুক্তবর্ণ)", tip: "Reph — korrmo → কর্ম"),
         CheatEntry(latin: "rri", bangla: "ঋ / ৃ", category: "Conjuncts (যুক্তবর্ণ)", tip: "rriN → ঋণ, brritto → বৃত্ত"),
-        CheatEntry(latin: "hs", bangla: "্\u{200C}", category: "Conjuncts (যুক্তবর্ণ)", tip: "Hasanta — shows the sign and keeps the letters apart: allahhs → আল্লাহ্\u{200C}. To JOIN two consonants use a fola instead: swamee → স্বামী, not s + hs + b"),
-        CheatEntry(latin: "w", bangla: "্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "Bo-fola — joins onto the consonant before it: swamee → স্বামী, SaSwoto → শাশ্বত"),
-        CheatEntry(latin: "y / z / Z", bangla: "্য", category: "Conjuncts (যুক্তবর্ণ)", tip: "Jo-fola after a consonant — bzbohar → ব্যবহার"),
 
         // Numbers
+        // Folas & signs — grouped the way Ridmik teaches them.
+        CheatEntry(latin: "rr", bangla: "র্", category: "Folas & Signs (ফলা ও চিহ্ন)", tip: "Reph — korrmo → কর্ম"),
+        CheatEntry(latin: "r", bangla: "্র", category: "Folas & Signs (ফলা ও চিহ্ন)", tip: "Ro-fola after a consonant — promaN → প্রমাণ"),
+        CheatEntry(latin: "w", bangla: "্ব", category: "Folas & Signs (ফলা ও চিহ্ন)", tip: "Bo-fola after a consonant — swamI → স্বামী, shwashwoto → শ্বাশ্বত"),
+        CheatEntry(latin: "y / z / Z", bangla: "্য", category: "Folas & Signs (ফলা ও চিহ্ন)", tip: "Jo-fola after a consonant — bybohar → ব্যবহার. Use Z after a vowel: oZanimeshon → অ্যানিমেশন"),
+        CheatEntry(latin: "hs", bangla: "্\u{200C}", category: "Folas & Signs (ফলা ও চিহ্ন)", tip: "Hasanta. Between two consonants it joins them — shsbamI → স্বামী. At the end of a word it shows the sign — allahhs → আল্লাহ্\u{200C}. After a vowel it stays হ + স (ahsan → আহসান)"),
+        CheatEntry(latin: "kShm", bangla: "ক্ষ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক্ষ + ম"),
+        CheatEntry(latin: "tt", bangla: "ত্ত", category: "Conjuncts (যুক্তবর্ণ)", tip: "ত + ত"),
+        CheatEntry(latin: "ttw", bangla: "ত্ত্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "ত + ত + ব-ফলা"),
+        CheatEntry(latin: "tth", bangla: "ত্থ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ত + থ"),
+        CheatEntry(latin: "tm", bangla: "ত্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "ত + ম"),
+        CheatEntry(latin: "tr", bangla: "ত্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ত + র-ফলা"),
+        CheatEntry(latin: "kr", bangla: "ক্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + র-ফলা"),
+        CheatEntry(latin: "kl", bangla: "ক্ল", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + ল"),
+        CheatEntry(latin: "ks", bangla: "ক্স", category: "Conjuncts (যুক্তবর্ণ)", tip: "ক + স"),
+        CheatEntry(latin: "gr", bangla: "গ্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "গ + র-ফলা"),
+        CheatEntry(latin: "gl", bangla: "গ্ল", category: "Conjuncts (যুক্তবর্ণ)", tip: "গ + ল"),
+        CheatEntry(latin: "gm", bangla: "গ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "গ + ম"),
+        CheatEntry(latin: "gdh", bangla: "গ্ধ", category: "Conjuncts (যুক্তবর্ণ)", tip: "গ + ধ"),
+        CheatEntry(latin: "Ngk", bangla: "ঙ্ক", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঙ + ক"),
+        CheatEntry(latin: "Ngkh", bangla: "ঙ্খ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ঙ + খ"),
+        CheatEntry(latin: "jjw", bangla: "জ্জ্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "জ + জ + ব-ফলা"),
+        CheatEntry(latin: "ddh", bangla: "দ্ধ", category: "Conjuncts (যুক্তবর্ণ)", tip: "দ + ধ"),
+        CheatEntry(latin: "dv", bangla: "দ্ভ", category: "Conjuncts (যুক্তবর্ণ)", tip: "দ + ভ"),
+        CheatEntry(latin: "dm", bangla: "দ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "দ + ম"),
+        CheatEntry(latin: "nTh", bangla: "ন্ঠ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + ঠ"),
+        CheatEntry(latin: "nth", bangla: "ন্থ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + থ"),
+        CheatEntry(latin: "ndh", bangla: "ন্ধ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + ধ"),
+        CheatEntry(latin: "ndr", bangla: "ন্দ্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + দ + র-ফলা"),
+        CheatEntry(latin: "ntr", bangla: "ন্ত্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + ত + র-ফলা"),
+        CheatEntry(latin: "nm", bangla: "ন্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + ম"),
+        CheatEntry(latin: "nw", bangla: "ন্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "ন + ব-ফলা"),
+        CheatEntry(latin: "bdh", bangla: "ব্ধ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ব + ধ"),
+        CheatEntry(latin: "vr", bangla: "ভ্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ভ + র-ফলা"),
+        CheatEntry(latin: "mn", bangla: "ম্ন", category: "Conjuncts (যুক্তবর্ণ)", tip: "ম + ন"),
+        CheatEntry(latin: "shm", bangla: "শ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "শ + ম"),
+        CheatEntry(latin: "shw", bangla: "শ্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "শ + ব-ফলা"),
+        CheatEntry(latin: "Shk", bangla: "ষ্ক", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + ক"),
+        CheatEntry(latin: "Shp", bangla: "ষ্প", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + প"),
+        CheatEntry(latin: "Shf", bangla: "ষ্ফ", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + ফ"),
+        CheatEntry(latin: "Shm", bangla: "ষ্ম", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + ম"),
+        CheatEntry(latin: "ShTr", bangla: "ষ্ট্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "ষ + ট + র-ফলা"),
+        CheatEntry(latin: "sw", bangla: "স্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "স + ব-ফলা — swamI → স্বামী"),
+        CheatEntry(latin: "sth", bangla: "স্থ", category: "Conjuncts (যুক্তবর্ণ)", tip: "স + থ"),
+        CheatEntry(latin: "sf", bangla: "স্ফ", category: "Conjuncts (যুক্তবর্ণ)", tip: "স + ফ"),
+        CheatEntry(latin: "skr", bangla: "স্ক্র", category: "Conjuncts (যুক্তবর্ণ)", tip: "স + ক + র-ফলা"),
+        CheatEntry(latin: "spl", bangla: "স্প্ল", category: "Conjuncts (যুক্তবর্ণ)", tip: "স + প + ল"),
+        CheatEntry(latin: "hw", bangla: "হ্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "হ + ব-ফলা"),
+        CheatEntry(latin: "hrri", bangla: "হৃ", category: "Conjuncts (যুক্তবর্ণ)", tip: "হ + ঋ-কার"),
+        CheatEntry(latin: "cchw", bangla: "চ্ছ্ব", category: "Conjuncts (যুক্তবর্ণ)", tip: "চ + ছ + ব-ফলা"),
         CheatEntry(latin: "0", bangla: "০", category: "Numbers (সংখ্যা)", tip: "Shunyo"),
         CheatEntry(latin: "1", bangla: "১", category: "Numbers (সংখ্যা)", tip: "Ek"),
         CheatEntry(latin: "2", bangla: "২", category: "Numbers (সংখ্যা)", tip: "Dui"),

@@ -204,6 +204,49 @@ public final class RitiEngine: LekhiEngine {
         }
     }
 
+    // MARK: - Hand-typed hasanta
+
+    /// Ridmik teaches `hs` as the way to join two consonants by hand:
+    /// s + hs + b is স্ব. The shortcut layer hands that to riti as Avro's `,,`,
+    /// which always carries a zero-width non-joiner and so keeps the letters
+    /// apart (স্‌ব). Drop the non-joiner again wherever a consonant follows the
+    /// hasanta, and the pair forms its conjunct.
+    ///
+    /// Left alone when the user typed `,,` themselves — asking for the
+    /// non-joiner explicitly is exactly what that spelling is for — and at the
+    /// end of a word, where `allahhs` should keep showing আল্লাহ্‌.
+    private func joiningHandTypedHasanta(_ text: String) -> String {
+        guard appliesShortcuts, typed.contains("hs"), !typed.contains(",,") else { return text }
+
+        let scalars = Array(text.unicodeScalars)
+        var output = String.UnicodeScalarView()
+        for (index, scalar) in scalars.enumerated() {
+            if scalar.value == 0x200C,
+               index > 0, scalars[index - 1].value == 0x09CD,
+               index + 1 < scalars.count, Self.isBengaliConsonant(scalars[index + 1]) {
+                continue
+            }
+            output.append(scalar)
+        }
+        return String(output)
+    }
+
+    /// What the bar shows for a candidate. riti offers its own buffer back as
+    /// the Latin fallback, and that buffer holds the shortcut rewrite — so
+    /// typing `shsbamI` offered `s,,bamI`, and tapping it put the internal
+    /// spelling in the document. Show what the user typed instead.
+    private func displayed(_ candidate: String) -> String {
+        if !fed.isEmpty, candidate == fed { return typed }
+        return joiningHandTypedHasanta(candidate)
+    }
+
+    private static func isBengaliConsonant(_ scalar: Unicode.Scalar) -> Bool {
+        switch scalar.value {
+        case 0x0995...0x09B9, 0x09CE, 0x09DC...0x09DF: return true
+        default: return false
+        }
+    }
+
     // MARK: - Suggestion extraction
 
     private func suggestion(from raw: OpaquePointer) -> Suggestion {
@@ -220,7 +263,7 @@ public final class RitiEngine: LekhiEngine {
                 return .empty
             }
             defer { riti_string_free(pointer) }
-            let text = String(cString: pointer)
+            let text = joiningHandTypedHasanta(String(cString: pointer))
             return Suggestion(
                 candidates: text.isEmpty ? [] : [text],
                 preEditText: text,
@@ -258,13 +301,31 @@ public final class RitiEngine: LekhiEngine {
             requiredIndex: sourceDefaultIndex
         )
 
-        let visibleCandidates = visibleCandidateIndices.map { allCandidates[$0] }
+        // Joining a hand-typed hasanta can turn the literal reading into the
+        // same word the dictionary already offers (স্‌বামী becomes স্বামী), so
+        // keep the first of any pair that now reads the same — along with the
+        // riti index it maps to, which `commitCandidate` relies on.
+        var seen = Set<String>()
+        var keptIndices: [Int] = []
+        for sourceIndex in visibleCandidateIndices {
+            let text = displayed(allCandidates[sourceIndex])
+            if seen.insert(text).inserted {
+                keptIndices.append(sourceIndex)
+            } else if sourceIndex == sourceDefaultIndex,
+                      let twin = keptIndices.firstIndex(where: { displayed(allCandidates[$0]) == text }) {
+                // The default must stay visible; let it stand in for its twin.
+                keptIndices[twin] = sourceIndex
+            }
+        }
+        visibleCandidateIndices = keptIndices
+
+        let visibleCandidates = visibleCandidateIndices.map { displayed(allCandidates[$0]) }
         let visibleDefaultIndex = visibleCandidateIndices.firstIndex(of: sourceDefaultIndex) ?? 0
-        let preEdit = preEditText(
+        let preEdit = joiningHandTypedHasanta(preEditText(
             from: raw,
             sourceIndex: sourceDefaultIndex,
             fallback: allCandidates[sourceDefaultIndex]
-        )
+        ))
 
         return Suggestion(
             candidates: visibleCandidates,

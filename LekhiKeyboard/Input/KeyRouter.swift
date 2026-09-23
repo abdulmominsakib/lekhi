@@ -160,6 +160,16 @@ public final class KeyRouter {
             return .insert(String(c))
         }
 
+        // The ঃ key sends the finished sign, but in Avro the visarga is a
+        // letter of the word being spelled (`du:kho` -> দুঃখ). Treated as
+        // punctuation it ended the composition, so দুঃখ came out as দুঃ
+        // followed by a separate word খো. Hand it to the engine as Avro's `:`
+        // instead and the word carries on through it, the way Ridmik does.
+        if c == "ঃ", session.layout == .avroPhonetic, !session.isEmojiSearchActive,
+           !session.isNumericHostField, engine != nil {
+            return handleCharacter(":")
+        }
+
         // Emoji search: letter keys feed the query, not the host field.
         if session.isEmojiSearchActive {
             if c.isNewline {
