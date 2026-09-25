@@ -12,8 +12,8 @@ public enum EnglishSuggestionService {
 
     private static let checker = UITextChecker()
 
-    /// Generate up to 3 English word candidates for a given typed buffer.
-    public static func suggestions(for rawBuffer: String) -> [String] {
+    /// Generate up to `limit` English word candidates for a given typed buffer.
+    public static func suggestions(for rawBuffer: String, limit: Int = Suggestion.maxBarCount) -> [String] {
         let buffer = rawBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !buffer.isEmpty else { return [] }
 
@@ -31,36 +31,36 @@ public enum EnglishSuggestionService {
                 let match = matchCasing(source: buffer, target: word)
                 if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
                     results.append(match)
-                    if results.count >= 3 { break }
+                    if results.count >= limit { break }
                 }
             }
         }
 
         // 3. If we still need more candidates, fetch spelling guesses
-        if results.count < 3 {
+        if results.count < limit {
             if let guesses = checker.guesses(forWordRange: range, in: buffer, language: "en_US") {
                 for word in guesses {
                     let match = matchCasing(source: buffer, target: word)
                     if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
                         results.append(match)
-                        if results.count >= 3 { break }
+                        if results.count >= limit { break }
                     }
                 }
             }
         }
 
         // 4. Common words fallback if offline or no completions
-        if results.count < 3 {
+        if results.count < limit {
             for word in commonEnglishWords where word.lowercased().hasPrefix(buffer.lowercased()) {
                 let match = matchCasing(source: buffer, target: word)
                 if !results.contains(where: { $0.lowercased() == match.lowercased() }) {
                     results.append(match)
-                    if results.count >= 3 { break }
+                    if results.count >= limit { break }
                 }
             }
         }
 
-        return Array(results.prefix(3))
+        return Array(results.prefix(limit))
     }
 
     private static func matchCasing(source: String, target: String) -> String {

@@ -2,14 +2,15 @@
 //  SuggestionBarView.swift
 //  LekhiKeyboard
 //
-//  The three-slot candidate bar above the key grid.
+//  The candidate bar above the key grid.
 //
 //  Matches the reference design: three equal cells across the full plate
 //  width, centred 17 pt text, and a pair of short hairline dividers on the
 //  thirds. The dividers are hidden while there is nothing to suggest — in
 //  the old build they hung in an otherwise empty bar and read as a glitch.
 //
-//  With more than three items (the idle favourites list) the cells become a
+//  With more than three items — the idle favourites and everyday phrases, or
+//  the many readings the engine offers for one word — the cells become a
 //  horizontal strip, narrowed just enough that the fourth peeks in from the
 //  trailing edge to show there is more to swipe to.
 //
@@ -105,18 +106,27 @@ public struct SuggestionBarView: View {
             let cellWidth = max((proxy.size.width - Self.scrollPeek) / 3, 1)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
+                // Lazy: the idle list can run to hundreds of favourites.
+                LazyHStack(spacing: 0) {
                     ForEach(candidates.indices, id: \.self) { i in
-                        candidateCell(at: i)
-                            .frame(width: cellWidth)
+                        // A third of the bar at least, wider for a long
+                        // phrase: the strip scrolls, so nothing needs cutting.
+                        candidateCell(at: i, fitsText: true)
+                            .frame(minWidth: cellWidth)
                             .overlay(alignment: .leading) {
                                 if i > 0 { divider }
                             }
                     }
                 }
-                .scrollTargetLayout()
             }
-            .scrollTargetBehavior(.viewAligned)
+            // Free scrolling, not `.viewAligned`: that only stops where a
+            // cell's leading edge meets the bar's, and with the peek the end
+            // of the list is never such a stop — it snapped back one cell
+            // short, leaving the last suggestion unreachable.
+            // A new word is a new list: start it from the front, where the
+            // reading already in the document sits, rather than wherever the
+            // previous word's list was left scrolled to.
+            .id(candidates)
         }
     }
 
@@ -129,7 +139,7 @@ public struct SuggestionBarView: View {
     }
 
     @ViewBuilder
-    private func candidateCell(at index: Int) -> some View {
+    private func candidateCell(at index: Int, fitsText: Bool = false) -> some View {
         let hasItem = index < candidates.count && !candidates[index].isEmpty
         let text = hasItem ? candidates[index] : ""
 
@@ -147,6 +157,7 @@ public struct SuggestionBarView: View {
             displayText: displayText,
             hasItem: hasItem,
             isSelected: index == selectedIndex && hasItem,
+            fitsText: fitsText,
             palette: palette,
             onTap: { onTap(index) },
             onLongPress: onLongPress.map { handler in { handler(index) } }
@@ -159,6 +170,9 @@ private struct CandidateCell: View {
     let displayText: String
     let hasItem: Bool
     let isSelected: Bool
+    /// Size the cell to its text instead of shrinking or truncating it — for
+    /// the scrolling strip, where a cell may be as wide as its phrase.
+    var fitsText: Bool = false
     let palette: KeyboardColorPalette
     let onTap: () -> Void
     let onLongPress: (() -> Void)?
@@ -176,8 +190,9 @@ private struct CandidateCell: View {
                 .font(Theme.candidateFont)
                 .foregroundStyle(palette.candidateText)
                 .lineLimit(1)
-                .minimumScaleFactor(0.65)
-                .padding(.horizontal, 10)
+                .minimumScaleFactor(fitsText ? 1 : 0.65)
+                .fixedSize(horizontal: fitsText, vertical: false)
+                .padding(.horizontal, fitsText ? 14 : 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle())

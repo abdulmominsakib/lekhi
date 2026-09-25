@@ -41,6 +41,10 @@ public struct Suggestion: Equatable, Sendable {
 
     public static let empty = Suggestion(candidates: [])
 
+    /// Most candidates the bar lists for one word. The bar scrolls, so this is
+    /// about keeping the list useful, not about fitting it on screen.
+    public static let maxBarCount = 12
+
     /// Top candidate, or empty string if there are none.
     public var top: String { candidates.first ?? "" }
 

@@ -87,28 +87,54 @@ public final class InputSession {
         return true
     }
 
-    /// Up to three visible candidates.
+    /// The engine's visible candidates, up to `Suggestion.maxBarCount`.
     public var candidates: [String] = []
+
+    /// What has been typed of the current word, in the script completions
+    /// are matched against.
+    private var typedForCompletion: String {
+        if layout == .english { return buffer }
+        return committedBengali.isEmpty ? preEditText : committedBengali
+    }
 
     /// Saved favourites that complete the word being composed, in favourites
     /// order. Shown ahead of the engine's candidates so a phrase the user saved
     /// ("আসসালামু আলাইকুম") is one tap away once its beginning is typed.
     public var savedWordMatches: [String] {
-        let typed: String
-        if layout == .english {
-            typed = buffer
-        } else if !committedBengali.isEmpty {
-            typed = committedBengali
-        } else {
-            typed = preEditText
-        }
-        return PinnedKeywordsStore.completions(of: typed, in: pinnedKeywords)
+        PinnedKeywordsStore.completions(of: typedForCompletion, in: pinnedKeywords)
     }
 
-    /// The full list the suggestion bar shows while composing: saved-keyword
-    /// completions first, then the engine's candidates.
+    /// Built-in everyday phrases that complete the word being composed.
+    ///
+    /// Offered *after* the engine's candidates, not before: favourites ahead
+    /// of the engine are the user's own choice, but a built-in list there
+    /// would push the reading actually in the document off the visible bar on
+    /// every short prefix — আ alone completes to half the list.
+    ///
+    /// Matched against every Bangla reading in the bar, not only the one in
+    /// the document: in phonetic-first mode `ami` is written অমি, while the
+    /// word meant — and the start of "আমি ভালো আছি" — is the engine's আমি.
+    public var commonPhraseMatches: [String] {
+        guard layout != .english else { return [] }
+        let shown = Set(savedWordMatches + candidates)
+        let prefixes = ([typedForCompletion] + candidates)
+            .filter { !$0.isEmpty && Self.usesBengaliScript($0) }
+        guard !prefixes.isEmpty else { return [] }
+
+        var matches: [String] = []
+        for phrase in CommonPhrases.bangla where !shown.contains(phrase) {
+            guard prefixes.contains(where: { phrase.count > $0.count && phrase.hasPrefix($0) }) else { continue }
+            matches.append(phrase)
+            if matches.count == CommonPhrases.maxCompletions { break }
+        }
+        return matches
+    }
+
+    /// The full list the suggestion bar shows while composing: favourite
+    /// completions, the engine's candidates, then built-in completions. The
+    /// bar scrolls, so all of them are reachable.
     public var barCandidates: [String] {
-        savedWordMatches + candidates
+        savedWordMatches + candidates + commonPhraseMatches
     }
 
     /// Where a suggestion-bar tap lands: a saved keyword, or an index into the
@@ -123,8 +149,12 @@ public final class InputSession {
         let matches = savedWordMatches
         if index < matches.count { return .savedWord(matches[index]) }
         let engineIndex = index - matches.count
-        guard engineIndex < candidates.count else { return nil }
-        return .engineCandidate(engineIndex)
+        if engineIndex < candidates.count { return .engineCandidate(engineIndex) }
+        // A built-in phrase replaces the word exactly like a favourite does.
+        let phraseIndex = engineIndex - candidates.count
+        let phrases = commonPhraseMatches
+        guard phraseIndex < phrases.count else { return nil }
+        return .savedWord(phrases[phraseIndex])
     }
 
     /// Favourite keywords shown in the suggestion bar while idle
@@ -155,12 +185,17 @@ public final class InputSession {
 
     /// What the bar offers while idle, before anything is typed.
     ///
-    /// Favourites lead on every layout, but the English layout has no use for
-    /// Bengali script — tapping one would drop Bengali into an English
-    /// sentence — so English shows only its Latin favourites and, until there
-    /// are enough of those to fill the bar, common English words behind them.
+    /// Favourites lead on every layout. Bangla layouts follow them with the
+    /// built-in everyday phrases, a swipe along the bar. The English layout
+    /// has no use for Bengali script — tapping one would drop Bengali into an
+    /// English sentence — so English shows only its Latin favourites and,
+    /// until there are enough of those to fill the bar, common English words
+    /// behind them.
     public var idleCandidates: [String] {
-        guard layout == .english else { return pinnedKeywords }
+        guard layout == .english else {
+            var seen = Set(pinnedKeywords)
+            return pinnedKeywords + CommonPhrases.bangla.filter { seen.insert($0).inserted }
+        }
 
         let english = pinnedKeywords.filter { !Self.usesBengaliScript($0) }
         guard english.count < 3 else { return english }
@@ -222,7 +257,7 @@ public final class InputSession {
     /// the composition on the first letter of any word riti has only one
     /// reading for — every vowel-initial word, `ami` included.
     public func apply(_ suggestion: Suggestion, engineSessionActive: Bool) {
-        candidates = suggestion.topThree
+        candidates = suggestion.candidates
         preEditText = suggestion.preEditText
         selectedIndex = candidates.isEmpty ? -1 : suggestion.defaultIndex
         hasActiveSession = !suggestion.candidates.isEmpty && engineSessionActive

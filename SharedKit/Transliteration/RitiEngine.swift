@@ -404,7 +404,7 @@ public final class RitiEngine: LekhiEngine {
     private func visibleIndices(candidateCount: Int, requiredIndex: Int) -> [Int] {
         var indices = [requiredIndex]
         for index in 0..<candidateCount where index != requiredIndex {
-            guard indices.count < 3 else { break }
+            guard indices.count < Suggestion.maxBarCount else { break }
             indices.append(index)
         }
         return indices

@@ -36,6 +36,7 @@
 		1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F3 /* CompositionIntegrityTests.swift */; };
 		1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F4 /* CheatSheetTests.swift */; };
 		1C00000000000000000000F5 /* RidmikConformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F5 /* RidmikConformanceTests.swift */; };
+		1C00000000000000000000F6 /* SuggestionBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000F6 /* SuggestionBarTests.swift */; };
 		1A00000000000000000000BC /* EmojiPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000BC /* EmojiPickerView.swift */; };
 		1A00000000000000000000C0 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C0 /* AppGroup.swift */; };
 		1A00000000000000000000C1 /* DataPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000C1 /* DataPaths.swift */; };
@@ -54,6 +55,8 @@
 		1A00000000000000000000CE /* KeyboardHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CE /* KeyboardHeight.swift */; };
 		1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000CF /* CharacterPreviewStore.swift */; };
 		1A00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D0 /* EmojiRecentsStore.swift */; };
+		1A00000000000000000000D7 /* CommonPhrases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D7 /* CommonPhrases.swift */; };
+		1B00000000000000000000D7 /* CommonPhrases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D7 /* CommonPhrases.swift */; };
 		1A00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D6 /* PinnedKeywordsStore.swift */; };
 		1A00000000000000000000D1 /* dictionary.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D1 /* dictionary.json */; };
 		1A00000000000000000000D2 /* autocorrect.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000D2 /* autocorrect.json */; };
@@ -158,6 +161,7 @@
 		2A00000000000000000000F3 /* CompositionIntegrityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompositionIntegrityTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F4 /* CheatSheetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheatSheetTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F5 /* RidmikConformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidmikConformanceTests.swift; sourceTree = "<group>"; };
+		2A00000000000000000000F6 /* SuggestionBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionBarTests.swift; sourceTree = "<group>"; };
 		2A00000000000000000000F0 /* LekhiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LekhiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A00000000000000000000BC /* EmojiPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPickerView.swift; sourceTree = "<group>"; };
 		2A00000000000000000000C0 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -177,6 +181,7 @@
 		2A00000000000000000000CE /* KeyboardHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeight.swift; sourceTree = "<group>"; };
 		2A00000000000000000000CF /* CharacterPreviewStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterPreviewStore.swift; sourceTree = "<group>"; };
 		2A00000000000000000000D0 /* EmojiRecentsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiRecentsStore.swift; sourceTree = "<group>"; };
+		2A00000000000000000000D7 /* CommonPhrases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonPhrases.swift; sourceTree = "<group>"; };
 		2A00000000000000000000D6 /* PinnedKeywordsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedKeywordsStore.swift; sourceTree = "<group>"; };
 		2A00000000000000000000D1 /* dictionary.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = dictionary.json; sourceTree = "<group>"; };
 		2A00000000000000000000D2 /* autocorrect.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = autocorrect.json; sourceTree = "<group>"; };
@@ -337,6 +342,7 @@
 				2A00000000000000000000CF /* CharacterPreviewStore.swift */,
 				2A00000000000000000000D0 /* EmojiRecentsStore.swift */,
 				2A00000000000000000000D6 /* PinnedKeywordsStore.swift */,
+				2A00000000000000000000D7 /* CommonPhrases.swift */,
 				5G00000000000000000000C1 /* Transliteration */,
 			);
 			path = SharedKit;
@@ -359,6 +365,7 @@
 				2A00000000000000000000F3 /* CompositionIntegrityTests.swift */,
 				2A00000000000000000000F4 /* CheatSheetTests.swift */,
 				2A00000000000000000000F5 /* RidmikConformanceTests.swift */,
+				2A00000000000000000000F6 /* SuggestionBarTests.swift */,
 			);
 			path = LekhiTests;
 			sourceTree = "<group>";
@@ -551,6 +558,7 @@
 				1A00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
 				1A00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */,
 				1A00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */,
+				1A00000000000000000000D7 /* CommonPhrases.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -589,6 +597,7 @@
 				1B00000000000000000000CF /* CharacterPreviewStore.swift in Sources */,
 				1B00000000000000000000D0 /* EmojiRecentsStore.swift in Sources */,
 				1B00000000000000000000D6 /* PinnedKeywordsStore.swift in Sources */,
+				1B00000000000000000000D7 /* CommonPhrases.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -601,6 +610,7 @@
 				1C00000000000000000000F3 /* CompositionIntegrityTests.swift in Sources */,
 				1C00000000000000000000F4 /* CheatSheetTests.swift in Sources */,
 				1C00000000000000000000F5 /* RidmikConformanceTests.swift in Sources */,
+				1C00000000000000000000F6 /* SuggestionBarTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
