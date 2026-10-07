@@ -4,9 +4,10 @@
 //
 //  A mechanical keycap drawn the way the reference design draws it: a light
 //  bevel skirt, a bright rim, a concave dish shaded from #F0F0F0 down to
-//  #FCFCFC, and a soft drop shadow on the plate. Also owns the press
-//  animation, the Apple-style character balloon, backspace auto-repeat and
-//  the spacebar language swipe.
+//  #FCFCFC, and a soft drop shadow on the plate. Also draws the press, the
+//  Apple-style character balloon and the spacebar's language-swipe label.
+//  Touches themselves are handled once for the whole grid by
+//  `KeyTouchSurface`, which drives this key through its `KeyPressVisual`.
 //
 
 import SwiftUI
@@ -30,20 +31,15 @@ public struct KeyboardKey: View {
     /// iOS clips a keyboard extension to its own bounds, so the preview
     /// balloon must not rise further than this.
     public let popupHeadroom: CGFloat
-    /// Fired when a spacebar drag crosses the language-switch threshold.
-    /// The press has already emitted its space on touch-down by then, so the
-    /// handler is responsible for retracting that space before it switches
-    /// layouts.
-    public let onSwipeLanguage: ((Bool) -> Void)?
+    /// Press state, written by the grid's touch surface.
+    public let visual: KeyPressVisual
+    /// Fires the key for VoiceOver and other assistive activation. Touches go
+    /// through the touch surface instead.
     public let onPress: () -> Void
 
-    @State private var isPressed: Bool = false
-    @State private var dragOffset: CGFloat = 0
-    @State private var hasSwiped: Bool = false
-    /// Which way the finger was moving when the language flip fired, so the
-    /// incoming label slides in from the side it came from.
-    @State private var swipeForward: Bool = true
-    @State private var repeatTask: Task<Void, Never>?
+    private var isPressed: Bool { visual.isPressed }
+    private var dragOffset: CGFloat { visual.dragOffset }
+    private var swipeForward: Bool { visual.swipeForward }
 
     public init(
         descriptor: KeyDescriptor,
@@ -59,7 +55,7 @@ public struct KeyboardKey: View {
         isFirstInRow: Bool = false,
         isLastInRow: Bool = false,
         popupHeadroom: CGFloat = .infinity,
-        onSwipeLanguage: ((Bool) -> Void)? = nil,
+        visual: KeyPressVisual,
         onPress: @escaping () -> Void
     ) {
         self.descriptor = descriptor
@@ -75,7 +71,7 @@ public struct KeyboardKey: View {
         self.isFirstInRow = isFirstInRow
         self.isLastInRow = isLastInRow
         self.popupHeadroom = popupHeadroom
-        self.onSwipeLanguage = onSwipeLanguage
+        self.visual = visual
         self.onPress = onPress
     }
 
@@ -95,13 +91,6 @@ public struct KeyboardKey: View {
         let deadZone: CGFloat = 10
         let switchPoint: CGFloat = 55
         return min(max((abs(dragOffset) - deadZone) / (switchPoint - deadZone), 0), 1)
-    }
-
-    /// Backspace and the spacebar auto-repeat while held, exactly like the
-    /// system keyboard. Everything else fires once.
-    private var repeatsWhileHeld: Bool {
-        if case .backspace = descriptor.action { return true }
-        return false
     }
 
     public var body: some View {
@@ -134,92 +123,11 @@ public struct KeyboardKey: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: bodyHeight)
-        // The design's caps sit 3 pt apart; pad the hit area back out so the
-        // touch target stays as forgiving as the system keyboard's.
-        .padding(.horizontal, -Theme.touchSlop)
-        .contentShape(Rectangle())
-        .padding(.horizontal, Theme.touchSlop)
         .zIndex(isPressed ? 999 : 1)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { onPress() }
-        .gesture(pressGesture)
-        .onDisappear { cancelRepeat() }
-    }
-
-    // MARK: - Gesture
-
-    private var pressGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if !isPressed {
-                    isPressed = true
-                    triggerFeedback()
-                    // Every key, the spacebar included, emits on touch-down so
-                    // that what reaches the document is ordered by the order
-                    // the keys were struck in. The spacebar used to emit on
-                    // touch-up, which reordered fast typing: roll a finger off
-                    // space onto the next letter and the letter's touch-down
-                    // beats space's touch-up, so "ami bangla" arrived as
-                    // a-m-i-b-space — riti composed the stray "b" into "amib"
-                    // and the space landed after the wrong word. A drag that
-                    // turns into a language swipe retracts this space through
-                    // `onSwipeLanguage`.
-                    onPress()
-                    startRepeatIfNeeded()
-                }
-
-                if descriptor.kind.isSpace && spacebarSwipeEnabled && onSwipeLanguage != nil {
-                    dragOffset = value.translation.width
-                    let horizontalDrag = abs(value.translation.width)
-                    let verticalDrag = abs(value.translation.height)
-
-                    // Require an intentional horizontal drag (> 55 pt) so it
-                    // can't fire by accident mid-sentence.
-                    if !hasSwiped && horizontalDrag > 55 && horizontalDrag > verticalDrag * 1.4 {
-                        hasSwiped = true
-                        swipeForward = value.translation.width > 0
-                        HapticManager.shared.candidateSelected()
-                        onSwipeLanguage?(swipeForward)
-                    }
-                }
-            }
-            .onEnded { _ in
-                cancelRepeat()
-                withAnimation(.easeOut(duration: 0.08)) {
-                    isPressed = false
-                }
-                // Settle the label back to rest on a spring so a swipe that
-                // stopped short of the switch point eases home instead of
-                // snapping.
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
-                    dragOffset = 0
-                }
-                hasSwiped = false
-            }
-    }
-
-    private func startRepeatIfNeeded() {
-        guard repeatsWhileHeld else { return }
-        cancelRepeat()
-        repeatTask = Task { @MainActor in
-            // Same cadence as the system keyboard: a pause, then ~15/s.
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            while !Task.isCancelled {
-                // A cancelled gesture does not reliably deliver `onEnded`, and
-                // a repeat that outlives the press keeps deleting on its own.
-                guard isPressed else { break }
-                onPress()
-                HapticManager.shared.keyPress(isAction: true)
-                try? await Task.sleep(nanoseconds: 65_000_000)
-            }
-        }
-    }
-
-    private func cancelRepeat() {
-        repeatTask?.cancel()
-        repeatTask = nil
     }
 
     // MARK: - Key Face
@@ -424,17 +332,6 @@ public struct KeyboardKey: View {
         case "globe": return "Next keyboard"
         default: return descriptor.label
         }
-    }
-
-    // MARK: - Feedback
-
-    private func triggerFeedback() {
-        MechanicalSoundManager.shared.playKeyPress(
-            isReturn: descriptor.kind.isReturn,
-            isSpace: descriptor.kind.isSpace,
-            isModifier: descriptor.kind.isAction
-        )
-        HapticManager.shared.keyPress(isAction: descriptor.kind.isAction)
     }
 }
 

@@ -22,6 +22,7 @@
 		1A00000000000000000000B2 /* KeyboardRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B2 /* KeyboardRootView.swift */; };
 		1A00000000000000000000B3 /* KeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B3 /* KeyboardLayout.swift */; };
 		1A00000000000000000000B4 /* KeyboardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B4 /* KeyboardKey.swift */; };
+		1A00000000000000000001A0 /* KeyTouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000001A0 /* KeyTouchSurface.swift */; };
 		1A00000000000000000000B5 /* KeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B5 /* KeyAction.swift */; };
 		1A00000000000000000000B6 /* KeyKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B6 /* KeyKind.swift */; };
 		1A00000000000000000000B7 /* SuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B7 /* SuggestionBarView.swift */; };
@@ -69,6 +70,7 @@
 		1B00000000000000000000B2 /* KeyboardRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B2 /* KeyboardRootView.swift */; };
 		1B00000000000000000000B3 /* KeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B3 /* KeyboardLayout.swift */; };
 		1B00000000000000000000B4 /* KeyboardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B4 /* KeyboardKey.swift */; };
+		1B00000000000000000001A0 /* KeyTouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000001A0 /* KeyTouchSurface.swift */; };
 		1B00000000000000000000B5 /* KeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B5 /* KeyAction.swift */; };
 		1B00000000000000000000B6 /* KeyKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B6 /* KeyKind.swift */; };
 		1B00000000000000000000B7 /* SuggestionBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A00000000000000000000B7 /* SuggestionBarView.swift */; };
@@ -148,6 +150,7 @@
 		2A00000000000000000000B2 /* KeyboardRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardRootView.swift; sourceTree = "<group>"; };
 		2A00000000000000000000B3 /* KeyboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardLayout.swift; sourceTree = "<group>"; };
 		2A00000000000000000000B4 /* KeyboardKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKey.swift; sourceTree = "<group>"; };
+		2A00000000000000000001A0 /* KeyTouchSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyTouchSurface.swift; sourceTree = "<group>"; };
 		2A00000000000000000000B5 /* KeyAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAction.swift; sourceTree = "<group>"; };
 		2A00000000000000000000B6 /* KeyKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyKind.swift; sourceTree = "<group>"; };
 		2A00000000000000000000B7 /* SuggestionBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionBarView.swift; sourceTree = "<group>"; };
@@ -303,6 +306,7 @@
 				2A00000000000000000000B2 /* KeyboardRootView.swift */,
 				2A00000000000000000000B3 /* KeyboardLayout.swift */,
 				2A00000000000000000000B4 /* KeyboardKey.swift */,
+				2A00000000000000000001A0 /* KeyTouchSurface.swift */,
 				2A00000000000000000000B5 /* KeyAction.swift */,
 				2A00000000000000000000B6 /* KeyKind.swift */,
 				2A00000000000000000000B7 /* SuggestionBarView.swift */,
@@ -531,6 +535,7 @@
 				1A00000000000000000000B2 /* KeyboardRootView.swift in Sources */,
 				1A00000000000000000000B3 /* KeyboardLayout.swift in Sources */,
 				1A00000000000000000000B4 /* KeyboardKey.swift in Sources */,
+				1A00000000000000000001A0 /* KeyTouchSurface.swift in Sources */,
 				1A00000000000000000000B5 /* KeyAction.swift in Sources */,
 				1A00000000000000000000B6 /* KeyKind.swift in Sources */,
 				1A00000000000000000000B7 /* SuggestionBarView.swift in Sources */,
@@ -570,6 +575,7 @@
 				1B00000000000000000000B2 /* KeyboardRootView.swift in Sources */,
 				1B00000000000000000000B3 /* KeyboardLayout.swift in Sources */,
 				1B00000000000000000000B4 /* KeyboardKey.swift in Sources */,
+				1B00000000000000000001A0 /* KeyTouchSurface.swift in Sources */,
 				1B00000000000000000000B5 /* KeyAction.swift in Sources */,
 				1B00000000000000000000B6 /* KeyKind.swift in Sources */,
 				1B00000000000000000000B7 /* SuggestionBarView.swift in Sources */,
@@ -754,7 +760,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -784,7 +790,7 @@
 		"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = AccentColor;
 		"CODE_SIGN_ENTITLEMENTS" = "Lekhi/Lekhi.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"ENABLE_PREVIEWS" = YES;
 		"GENERATE_INFOPLIST_FILE" = NO;
@@ -812,7 +818,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -838,7 +844,7 @@
 	buildSettings = {
 		"CODE_SIGN_ENTITLEMENTS" = "LekhiKeyboard/LekhiKeyboard.entitlements";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = NO;
 		"INFOPLIST_FILE" = "LekhiKeyboard/Info.plist";
@@ -865,7 +871,7 @@
 		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
 		"BUNDLE_LOADER" = "$(TEST_HOST)";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = YES;
 		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";
@@ -887,7 +893,7 @@
 		"ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES" = NO;
 		"BUNDLE_LOADER" = "$(TEST_HOST)";
 		"CODE_SIGN_STYLE" = Automatic;
-		"CURRENT_PROJECT_VERSION" = 30;
+		"CURRENT_PROJECT_VERSION" = 36;
 		"DEVELOPMENT_TEAM" = TZX5LG7ZW5;
 		"GENERATE_INFOPLIST_FILE" = YES;
 		"IPHONEOS_DEPLOYMENT_TARGET" = "17.0";

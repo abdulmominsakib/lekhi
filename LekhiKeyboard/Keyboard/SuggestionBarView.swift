@@ -10,9 +10,9 @@
 //  the old build they hung in an otherwise empty bar and read as a glitch.
 //
 //  With more than three items — the idle favourites and everyday phrases, or
-//  the many readings the engine offers for one word — the cells become a
-//  horizontal strip, narrowed just enough that the fourth peeks in from the
-//  trailing edge to show there is more to swipe to.
+//  the many readings the engine offers for one word — the same strip scrolls,
+//  its cells narrowed just enough that the fourth peeks in from the trailing
+//  edge to show there is more to swipe to.
 //
 
 import SwiftUI
@@ -67,66 +67,75 @@ public struct SuggestionBarView: View {
     }
 
     public var body: some View {
-        Group {
-            if candidates.count > 3 {
-                scrollingCells
-            } else {
-                fixedCells
-            }
-        }
-        .opacity(notice == nil ? 1 : 0)
-        .allowsHitTesting(notice == nil)
-        .overlay {
-            if let notice {
-                FavouriteNoticeView(notice: notice, palette: palette)
-                    .transition(.opacity)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(palette.candidateBarBackground)
-        .animation(.easeOut(duration: 0.12), value: hasAnyCandidate)
-        .animation(.easeOut(duration: 0.15), value: notice)
-    }
-
-    private var fixedCells: some View {
-        HStack(spacing: 0) {
-            ForEach(0..<3, id: \.self) { i in
-                candidateCell(at: i)
-
-                if i < 2 {
-                    divider
-                        .opacity(hasAnyCandidate ? 1 : 0)
+        cells
+            .opacity(notice == nil ? 1 : 0)
+            .allowsHitTesting(notice == nil)
+            .overlay {
+                if let notice {
+                    FavouriteNoticeView(notice: notice, palette: palette)
+                        .transition(.opacity)
                 }
             }
-        }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(palette.candidateBarBackground)
+            .animation(.easeOut(duration: 0.12), value: hasAnyCandidate)
+            .animation(.easeOut(duration: 0.15), value: notice)
     }
 
-    private var scrollingCells: some View {
-        GeometryReader { proxy in
-            let cellWidth = max((proxy.size.width - Self.scrollPeek) / 3, 1)
+    /// One strip for every list, short or long. Three or fewer candidates fill
+    /// fixed thirds and the strip does not scroll; more narrow the cells so
+    /// the fourth peeks in, and it scrolls.
+    ///
+    /// Both used to be separate view trees, swapped whenever the count
+    /// crossed three — which it does at the start of most words — and every
+    /// swap built the bar from nothing. Now the count only changes widths and
+    /// whether the strip scrolls, never what the bar is made of.
+    private var cells: some View {
+        let scrolls = candidates.count > 3
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                // Lazy: the idle list can run to hundreds of favourites.
-                LazyHStack(spacing: 0) {
-                    ForEach(candidates.indices, id: \.self) { i in
-                        // A third of the bar at least, wider for a long
-                        // phrase: the strip scrolls, so nothing needs cutting.
-                        candidateCell(at: i, fitsText: true)
-                            .frame(minWidth: cellWidth)
-                            .overlay(alignment: .leading) {
-                                if i > 0 { divider }
-                            }
+        return GeometryReader { proxy in
+            let cellWidth = scrolls
+                ? max((proxy.size.width - Self.scrollPeek) / 3, 1)
+                : proxy.size.width / 3
+
+            ScrollViewReader { scroller in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    // Lazy: the idle list can run to hundreds of favourites.
+                    LazyHStack(spacing: 0) {
+                        ForEach(0..<max(3, candidates.count), id: \.self) { i in
+                            // Scrolling, a cell is a third of the bar at least
+                            // and wider for a long phrase, so nothing needs
+                            // cutting; fixed, it is exactly a third and long
+                            // text shrinks to fit.
+                            candidateCell(at: i, fitsText: scrolls)
+                                .frame(width: scrolls ? nil : cellWidth)
+                                .frame(minWidth: scrolls ? cellWidth : nil)
+                                .overlay(alignment: .leading) {
+                                    if i > 0 {
+                                        divider.opacity(hasAnyCandidate ? 1 : 0)
+                                    }
+                                }
+                        }
                     }
                 }
+                .scrollDisabled(!scrolls)
+                // Free scrolling, not `.viewAligned`: that only stops where a
+                // cell's leading edge meets the bar's, and with the peek the end
+                // of the list is never such a stop — it snapped back one cell
+                // short, leaving the last suggestion unreachable.
+                // A new word is a new list: start it from the front, where the
+                // reading already in the document sits, rather than wherever the
+                // previous word's list was left scrolled to.
+                //
+                // Scrolled back, not rebuilt. This used to be `.id(candidates)`,
+                // and the candidates change on every keystroke, so each one
+                // threw the scroll view and every cell away and laid the bar out
+                // from nothing — most of the layout work a keystroke cost. Cells
+                // are keyed by position, so now a keystroke only changes text.
+                .onChange(of: candidates) {
+                    scroller.scrollTo(0, anchor: .leading)
+                }
             }
-            // Free scrolling, not `.viewAligned`: that only stops where a
-            // cell's leading edge meets the bar's, and with the peek the end
-            // of the list is never such a stop — it snapped back one cell
-            // short, leaving the last suggestion unreachable.
-            // A new word is a new list: start it from the front, where the
-            // reading already in the document sits, rather than wherever the
-            // previous word's list was left scrolled to.
-            .id(candidates)
         }
     }
 
