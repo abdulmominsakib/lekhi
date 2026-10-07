@@ -6,7 +6,7 @@
 
 <div align="center">
 
-<img src="../app_logo.png" width="128" height="128" alt="Lekhi App Logo" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);" />
+<img src="docs/assets/app-icon.png" width="128" height="128" alt="Lekhi App Logo" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);" />
 
 <br/><br/>
 
@@ -45,11 +45,11 @@
 
 | Interactive Typing | Home Dashboard | Avro Cheat Sheet |
 | :---: | :---: | :---: |
-| ![Typing Playground](../screenshots/01_hero_typing_playground.png) | ![Home Dashboard](../screenshots/02_home_dashboard.png) | ![Cheat Sheet](../screenshots/03_avro_cheatsheet.png) |
+| ![Typing Playground](docs/assets/screenshots/01_hero_typing_playground.jpg) | ![Home Dashboard](docs/assets/screenshots/02_home_dashboard.jpg) | ![Cheat Sheet](docs/assets/screenshots/03_avro_cheatsheet.jpg) |
 
 | Typing Speed Test | Customization Settings | Engine & Privacy |
 | :---: | :---: | :---: |
-| ![Typing Speed Test](../screenshots/04_typing_speed_test.png) | ![Settings](../screenshots/05_settings_customization.png) | ![Privacy Specs](../screenshots/06_privacy_and_engine.png) |
+| ![Typing Speed Test](docs/assets/screenshots/04_typing_speed_test.jpg) | ![Settings](docs/assets/screenshots/05_settings_customization.jpg) | ![Privacy Specs](docs/assets/screenshots/06_privacy_and_engine.jpg) |
 
 ---
 
