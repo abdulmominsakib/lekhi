@@ -295,22 +295,8 @@ struct SettingsView: View {
                     Text("Lekhi is free and open-source software hosted at github.com/abdulmominsakib/lekhi under the MIT License.")
                 }
 
-                // About & Diagnostics
+                // About
                 Section {
-                    EngineStatusRow()
-
-                    LabeledContent {
-                        HStack(spacing: 6) {
-                            Image(systemName: fullAccess.isGranted
-                                  ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(fullAccess.isGranted ? Color.green : Color.orange)
-                            Text(fullAccess.displayName)
-                                .foregroundStyle(.secondary)
-                        }
-                    } label: {
-                        Label("Full Access", systemImage: "hand.raised")
-                    }
-
                     NavigationLink {
                         EngineInfoView()
                     } label: {
@@ -323,7 +309,7 @@ struct SettingsView: View {
                         Label("About Lekhi", systemImage: "info.circle")
                     }
                 } header: {
-                    Text("System & Diagnostics")
+                    Text("System")
                 }
             }
             .navigationTitle("Settings")
@@ -395,58 +381,12 @@ struct FullAccessCallout: View {
     }
 }
 
-/// Surfaces whether the transliteration engine actually started.
-///
-/// When engine construction fails the keyboard stays usable but inserts plain
-/// Latin letters, which users report as "phonetic stopped working". Showing
-/// the recorded reason turns a silent, device-specific failure into something
-/// that can be diagnosed.
-struct EngineStatusRow: View {
-
-    @State private var state: EngineState = EngineDiagnostics.current()
-
-    var body: some View {
-        LabeledContent {
-            HStack(spacing: 6) {
-                Image(systemName: state.isHealthy ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                    .foregroundStyle(state.isHealthy ? Color.green : Color.orange)
-                Text(state.displayName)
-                    .foregroundStyle(.secondary)
-            }
-        } label: {
-            Label("Engine Status", systemImage: "waveform.badge.magnifyingglass")
-        }
-        .onAppear { state = EngineDiagnostics.current() }
-
-        if let hint = state.recoveryHint, !state.isHealthy {
-            Text(hint)
-                .font(.system(size: 13))
-                .foregroundStyle(.secondary)
-        }
-    }
-}
-
 struct EngineInfoView: View {
-
-    @State private var engineState: EngineState = EngineDiagnostics.current()
 
     var body: some View {
         Form {
             Section {
-                EngineStatusRow()
-                if let updated = EngineDiagnostics.lastUpdated() {
-                    LabeledContent("Last Checked") {
-                        Text(updated, style: .relative) + Text(" ago")
-                    }
-                }
-            } header: {
-                Text("Diagnostics")
-            } footer: {
-                Text("Updated each time the Lekhi keyboard starts up.")
-            }
-
-            Section {
-                LabeledContent("App Name") { Text("Lekhi (লেখী)") }
+                LabeledContent("App Name") { Text("Lekhi (লেখি)") }
                 LabeledContent("Transliteration Engine") { Text("Riti (Avro Phonetic)") }
                 LabeledContent("Open Source Base") { Text("OpenBangla / Lekho") }
                 LabeledContent("Dictionary Words") { Text("150,000+") }

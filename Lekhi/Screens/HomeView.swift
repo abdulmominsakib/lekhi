@@ -61,7 +61,7 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text("লেখী")
+                    Text("লেখি")
                         .font(.system(size: 26, weight: .black))
                         .foregroundStyle(Color(red: 0.08, green: 0.54, blue: 1.0))
                     Text("• Lekhi")

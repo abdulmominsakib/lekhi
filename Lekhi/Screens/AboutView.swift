@@ -84,7 +84,7 @@ struct AboutView: View {
                 .shadow(color: .black.opacity(0.12), radius: 6, x: 0, y: 3)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Lekhi (লেখী)")
+                Text("Lekhi (লেখি)")
                     .font(.system(size: 24, weight: .bold))
                 Text("3D Mechanical Avro Phonetic Bangla Keyboard for iOS.")
                     .font(.system(size: 14))
