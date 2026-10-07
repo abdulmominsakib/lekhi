@@ -1,4 +1,8 @@
-# Lekhi (লেখী) — 3D Mechanical Avro Phonetic Bangla Keyboard for iOS
+<p align="center">
+  <img src="docs/assets/banner.jpg" alt="Lekhi (লেখি) — বাংলা লিখুন অনায়াসে" width="100%" />
+</p>
+
+# Lekhi (লেখি) — 3D Mechanical Avro Phonetic Bangla Keyboard for iOS
 
 <div align="center">
 
