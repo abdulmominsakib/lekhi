@@ -4,9 +4,10 @@
 //
 //  Static description of the mechanical keyboard rows and layout modes.
 //
-//  Row shapes follow the reference design, where every row spans the full
-//  plate width: the home row widens its outer two caps (220 px vs 143 px)
-//  rather than being inset, and the bottom row is mode | space | return.
+//  Key positions follow Ridmik Keyboard, which is what most Bangla typists'
+//  thumbs already know: the home row is inset by half a key, the bottom row is
+//  123 | , | emoji | space | . | return, and the 123 page carries the symbols
+//  in Ridmik's order.
 //
 
 import Foundation
@@ -98,9 +99,14 @@ public enum HostKeyboardContext: Equatable, Sendable {
 
 public enum KeyboardLayoutFactory {
 
-    /// Width of the home row's outer caps, in letter-key units.
-    /// Design: 220 px against a 143 px letter cap.
-    private static let homeRowEdgeWeight: CGFloat = 1.538
+    /// The 123 / ABC toggle, in letter-key units, as Ridmik sizes it. On the
+    /// 123 page `#+=` and backspace are flexible instead, so that row spans the
+    /// plate edge to edge like Ridmik's.
+    private static let toggleWeight: CGFloat = 1.4
+
+    /// Ridmik's 123-page symbol row is ten keys inset by half a key at each
+    /// end, so its caps are a little narrower than the digits above.
+    private static let insetSymbolWeight: CGFloat = 0.9
 
     private static let avroHints: [Character: String] = [
         "q": "ক", "w": "ও", "e": "এ", "r": "র", "t": "ত",
@@ -131,13 +137,14 @@ public enum KeyboardLayoutFactory {
             shifted: isShifted,
             layout: layout
         )
-        var middle = letterRow(
+        // Nine standard caps, centred: the half-key inset at each end is
+        // where Ridmik (and the system keyboard) put the home row.
+        let middle = letterRow(
             rowId: "letters-row-1",
             letters: "asdfghjkl",
             shifted: isShifted,
             layout: layout
         )
-        middle = widenEdges(of: middle)
         let bottom = shiftRow(rowId: "letters-row-2", shifted: isShifted, layout: layout)
         let pads: KeyRow = {
             switch hostContext {
@@ -236,31 +243,31 @@ public enum KeyboardLayoutFactory {
                 action: .character(action)
             )
         })
+        // Ridmik's order. Bangla layouts put the taka sign where English has
+        // the dollar.
+        let currency: Character = layout == .english ? "$" : "৳"
         let row2 = KeyRow(
             id: "numbers-row-1",
-            keys: letterRow(rowId: "numbers-row-1", letters: "-/:;()$&@\"", shifted: false)
-                .keys
-                .map { key in
-                    // Avro spells the visarga with `:`, but a Bengali typist
-                    // reaching for that key wants the sign itself — দুঃখিত,
-                    // not দু:খিত. English keeps the ASCII colon.
-                    guard layout != .english, key.label == ":" else { return key }
-                    return KeyDescriptor(
-                        id: key.id,
-                        label: "ঃ",
-                        kind: .letter,
-                        action: .character("ঃ")
-                    )
-                }
+            keys: "@#\(currency)%&*-+()".enumerated().map { i, ch in
+                KeyDescriptor(
+                    id: "numbers-row-1-\(i)",
+                    label: String(ch),
+                    kind: .letter,
+                    action: .character(ch),
+                    widthWeight: insetSymbolWeight
+                )
+            }
         )
         let row3 = KeyRow(id: "numbers-row-2", keys: [
-            KeyDescriptor(id: "num-sym-toggle", label: "#+=", kind: .action, action: .switchSymbols, widthWeight: 2.6),
-            KeyDescriptor(id: "num-dot", label: ".", kind: .letter, action: .character(".")),
-            KeyDescriptor(id: "num-comma", label: ",", kind: .letter, action: .character(",")),
-            KeyDescriptor(id: "num-question", label: "?", kind: .letter, action: .character("?")),
-            KeyDescriptor(id: "num-exclaim", label: "!", kind: .letter, action: .character("!")),
-            KeyDescriptor(id: "num-quote", label: "'", kind: .letter, action: .character("'")),
-            KeyDescriptor(id: "num-backspace", label: "⌫", kind: .action, action: .backspace(word: false), widthWeight: 2.6)
+            KeyDescriptor(id: "num-sym-toggle", label: "#+=", kind: .action, action: .switchSymbols, isFlexible: true)
+        ] + letterRow(rowId: "numbers-row-2", letters: "!\"':;/?", shifted: false).keys.map { key in
+            // Avro spells the visarga with `:`, but a Bengali typist
+            // reaching for that key wants the sign itself — দুঃখিত,
+            // not দু:খিত. English keeps the ASCII colon.
+            guard layout != .english, key.label == ":" else { return key }
+            return KeyDescriptor(id: key.id, label: "ঃ", kind: .letter, action: .character("ঃ"))
+        } + [
+            KeyDescriptor(id: "num-backspace", label: "⌫", kind: .action, action: .backspace(word: false), isFlexible: true)
         ])
         let pads = bottomRow(
             rowId: "numbers-row-3",
@@ -296,28 +303,6 @@ public enum KeyboardLayoutFactory {
     }
 
     // MARK: - Helpers
-
-    /// Stretch a nine-key row out to the full plate width by widening its
-    /// outer caps, the way the design draws the home row.
-    private static func widenEdges(of row: KeyRow) -> KeyRow {
-        guard row.keys.count > 2 else { return row }
-        var keys = row.keys
-        keys[0] = resized(keys[0], to: homeRowEdgeWeight)
-        keys[keys.count - 1] = resized(keys[keys.count - 1], to: homeRowEdgeWeight)
-        return KeyRow(id: row.id, keys: keys)
-    }
-
-    private static func resized(_ key: KeyDescriptor, to weight: CGFloat) -> KeyDescriptor {
-        KeyDescriptor(
-            id: key.id,
-            label: key.label,
-            bengaliHint: key.bengaliHint,
-            kind: key.kind,
-            action: key.action,
-            widthWeight: weight,
-            isFlexible: key.isFlexible
-        )
-    }
 
     private static func letterRow(
         rowId: String,
@@ -370,57 +355,51 @@ public enum KeyboardLayoutFactory {
         )
     }
 
-    /// Apple-style email bottom row: 123 | @ | space | . | return (+ globe when needed).
+    /// Email bottom row: the standard one with `@` in the comma's place.
     private static func emailBottomRow(rowId: String, showsGlobeKey: Bool) -> KeyRow {
-        var keys: [KeyDescriptor] = [
-            KeyDescriptor(id: "\(rowId)-mode", label: "123", kind: .action, action: .switchLayout, widthWeight: 1.75)
-        ]
-        if showsGlobeKey {
-            keys.append(
-                KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 1.15)
-            )
-        }
-        keys.append(
-            KeyDescriptor(id: "\(rowId)-at", label: "@", kind: .letter, action: .character("@"), widthWeight: 1.15)
+        bottomRow(
+            rowId: rowId,
+            modeLabel: "123",
+            modeAction: .switchLayout,
+            showsGlobeKey: showsGlobeKey,
+            leftPunctuation: "@"
         )
-        keys.append(
-            KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, isFlexible: true)
-        )
-        keys.append(
-            KeyDescriptor(id: "\(rowId)-dot", label: ".", kind: .letter, action: .character("."), widthWeight: 1.15)
-        )
-        keys.append(
-            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 2.0)
-        )
-        return KeyRow(id: rowId, keys: keys)
     }
 
-    /// The design's bottom row is mode | space | return. The globe is only
-    /// added when iOS says this keyboard has to provide its own input-mode
-    /// switcher — on iOS versions that draw a system globe below the
-    /// keyboard, including one here would be a duplicate.
+    /// Ridmik's bottom row: mode | , | emoji | space | . | return. The globe
+    /// is only added when iOS says this keyboard has to provide its own
+    /// input-mode switcher — on iOS versions that draw a system globe below
+    /// the keyboard, including one here would be a duplicate.
     private static func bottomRow(
         rowId: String,
         modeLabel: String,
         modeAction: KeyAction,
-        showsGlobeKey: Bool
+        showsGlobeKey: Bool,
+        leftPunctuation: Character = ","
     ) -> KeyRow {
         var keys: [KeyDescriptor] = [
-            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: 1.75)
+            KeyDescriptor(id: "\(rowId)-mode", label: modeLabel, kind: .action, action: modeAction, widthWeight: toggleWeight)
         ]
         if showsGlobeKey {
             keys.append(
-                KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 1.25)
+                KeyDescriptor(id: "\(rowId)-globe", label: "globe", kind: .globe, action: .nextKeyboard, widthWeight: 1.0)
             )
         }
         keys.append(
-            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 1.25)
+            KeyDescriptor(id: "\(rowId)-left-punct", label: String(leftPunctuation), kind: .action,
+                          action: .character(leftPunctuation), widthWeight: 1.0)
+        )
+        keys.append(
+            KeyDescriptor(id: "\(rowId)-emoji", label: "emoji", kind: .emoji, action: .emoji, widthWeight: 1.0)
         )
         keys.append(
             KeyDescriptor(id: "\(rowId)-space", label: "space", kind: .space, action: .space, isFlexible: true)
         )
         keys.append(
-            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 2.2)
+            KeyDescriptor(id: "\(rowId)-period", label: ".", kind: .action, action: .character("."), widthWeight: 1.0)
+        )
+        keys.append(
+            KeyDescriptor(id: "\(rowId)-return", label: "↵", kind: .return, action: .return, widthWeight: 1.6)
         )
         return KeyRow(id: rowId, keys: keys)
     }

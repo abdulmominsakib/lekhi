@@ -15,9 +15,13 @@ public enum AppGroup {
     /// Shared `UserDefaults` suite. Falls back to `.standard` if the
     /// app group is not available (e.g. during early development
     /// before entitlements are wired up).
-    public static var defaults: UserDefaults {
-        UserDefaults(suiteName: identifier) ?? .standard
-    }
+    ///
+    /// Created once. Building a fresh suite on every access put a new
+    /// `UserDefaults` — and a preferences lookup that could go out to
+    /// cfprefsd — on the main thread twice per keystroke (sound profile and
+    /// haptic intensity), right on touch-down. A single instance still sees
+    /// the host app's writes; the suite is shared through cfprefsd either way.
+    public static let defaults: UserDefaults = UserDefaults(suiteName: identifier) ?? .standard
 
     /// Root of the App Group container on disk, where bundled data
     /// files are copied once on first launch.

@@ -2,9 +2,9 @@
 //  CommonPhrases.swift
 //  SharedKit
 //
-//  Everyday Bangla words and phrases the keyboard offers on its own: in the
-//  idle suggestion bar after the user's favourites, and as completions of the
-//  word being typed after the engine's own candidates.
+//  Everyday Bangla words and phrases the keyboard offers on its own, as
+//  completions of the word being typed after the engine's own candidates —
+//  once enough of the phrase has been typed (`InputSession.minimumTypedShare`).
 //
 //  Kept apart from `PinnedKeywordsStore` on purpose. Favourites are the user's
 //  list to curate; these are built in, so they never clutter it and every
@@ -19,8 +19,8 @@ public enum CommonPhrases {
     /// bury the engine's candidates under a long tail.
     public static let maxCompletions = 6
 
-    /// Ordered roughly by how often they're typed — the first few are what
-    /// shows in the idle bar without scrolling.
+    /// Ordered roughly by how often they're typed, which is the order
+    /// completions appear in.
     public static let bangla: [String] = [
         // Greetings and courtesy
         "আসসালামু আলাইকুম",

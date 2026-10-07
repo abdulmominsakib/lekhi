@@ -40,13 +40,11 @@ final class SuggestionBarTests: XCTestCase {
 
     // MARK: - Idle bar
 
-    func testIdleBarFollowsFavouritesWithEverydayPhrases() {
-        let s = session(pinned: ["আমার নাম", "ধন্যবাদ"])
-        let idle = s.idleCandidates
-
-        XCTAssertEqual(Array(idle.prefix(2)), ["আমার নাম", "ধন্যবাদ"], "favourites must lead")
-        XCTAssertTrue(idle.contains("আসসালামু আলাইকুম"))
-        XCTAssertEqual(idle.count, Set(idle).count, "a favourite that is also built in appears twice")
+    /// With nothing typed, nothing built in is relevant — only favourites.
+    func testIdleBarShowsOnlyFavourites() {
+        XCTAssertEqual(session(pinned: ["আমার নাম", "ধন্যবাদ"]).idleCandidates, ["আমার নাম", "ধন্যবাদ"])
+        XCTAssertEqual(session().idleCandidates, [])
+        XCTAssertEqual(session(layout: .english, pinned: ["hello"]).idleCandidates, ["hello"])
     }
 
     func testEnglishIdleBarGetsNoBanglaPhrases() {
@@ -109,6 +107,22 @@ final class SuggestionBarTests: XCTestCase {
         XCTAssertLessThanOrEqual(s.commonPhraseMatches.count, CommonPhrases.maxCompletions)
     }
 
+    /// A phrase is only offered once a fair share of it is typed: আ alone is
+    /// not a reason to suggest আসসালামু আলাইকুম.
+    func testPhrasesNeedAQuarterTypedBeforeTheyAreOffered() {
+        let s = session(pinned: ["আসসালামু আলাইকুম ভাই"])
+        s.committedBengali = "আ"
+        s.candidates = ["আ"]
+        s.hasActiveSession = true
+        XCTAssertFalse(s.commonPhraseMatches.contains("আসসালামু আলাইকুম"), "\(s.commonPhraseMatches)")
+        XCTAssertTrue(s.savedWordMatches.isEmpty, "\(s.savedWordMatches)")
+
+        s.committedBengali = "আসসালা"
+        s.candidates = ["আসসালা"]
+        XCTAssertTrue(s.commonPhraseMatches.contains("আসসালামু আলাইকুম"), "\(s.commonPhraseMatches)")
+        XCTAssertEqual(s.savedWordMatches, ["আসসালামু আলাইকুম ভাই"])
+    }
+
     func testEnglishGetsNoPhraseCompletions() {
         let s = session(layout: .english)
         s.buffer = "a"
@@ -125,7 +139,7 @@ final class SuggestionBarTests: XCTestCase {
         s.hasActiveSession = true
 
         XCTAssertTrue(s.commonPhraseMatches.contains("আমি ভালো আছি"), "\(s.commonPhraseMatches)")
-        XCTAssertTrue(s.commonPhraseMatches.contains("আমি তোমাকে ভালোবাসি"))
+        XCTAssertFalse(s.commonPhraseMatches.contains("আমি তোমাকে ভালোবাসি"), "too little of it typed yet")
         XCTAssertFalse(s.commonPhraseMatches.contains("আমি"), "a reading already in the bar was repeated")
     }
 

@@ -101,7 +101,26 @@ public final class InputSession {
     /// order. Shown ahead of the engine's candidates so a phrase the user saved
     /// ("আসসালামু আলাইকুম") is one tap away once its beginning is typed.
     public var savedWordMatches: [String] {
-        PinnedKeywordsStore.completions(of: typedForCompletion, in: pinnedKeywords)
+        let typed = typedForCompletion
+        return PinnedKeywordsStore.completions(of: typed, in: pinnedKeywords, limit: .max)
+            .filter { Self.isWorthCompleting($0, from: typed) }
+            .prefix(3)
+            .map { $0 }
+    }
+
+    /// Share of a phrase that has to be typed before it is offered as a
+    /// completion. Below this the bar filled with phrases that only shared a
+    /// first letter with the word — আ alone offered আসসালামু আলাইকুম — which
+    /// read as noise rather than help.
+    static let minimumTypedShare = 0.25
+
+    /// Whether `typed` covers enough of `phrase` to suggest it. Measured in
+    /// Unicode scalars so a vowel sign counts as typed progress, the same way
+    /// it took a keystroke.
+    static func isWorthCompleting(_ phrase: String, from typed: String) -> Bool {
+        let total = phrase.unicodeScalars.count
+        guard total > 0 else { return false }
+        return Double(typed.unicodeScalars.count) / Double(total) >= minimumTypedShare
     }
 
     /// Built-in everyday phrases that complete the word being composed.
@@ -123,7 +142,9 @@ public final class InputSession {
 
         var matches: [String] = []
         for phrase in CommonPhrases.bangla where !shown.contains(phrase) {
-            guard prefixes.contains(where: { phrase.count > $0.count && phrase.hasPrefix($0) }) else { continue }
+            guard prefixes.contains(where: {
+                phrase.count > $0.count && phrase.hasPrefix($0) && Self.isWorthCompleting(phrase, from: $0)
+            }) else { continue }
             matches.append(phrase)
             if matches.count == CommonPhrases.maxCompletions { break }
         }
@@ -183,30 +204,19 @@ public final class InputSession {
         buffer.isEmpty && !hasActiveSession
     }
 
-    /// What the bar offers while idle, before anything is typed.
+    /// What the bar offers while idle, before anything is typed: the user's
+    /// own favourites and nothing else.
     ///
-    /// Favourites lead on every layout. Bangla layouts follow them with the
-    /// built-in everyday phrases, a swipe along the bar. The English layout
-    /// has no use for Bengali script — tapping one would drop Bengali into an
-    /// English sentence — so English shows only its Latin favourites and,
-    /// until there are enough of those to fill the bar, common English words
-    /// behind them.
+    /// It used to pad them with built-in everyday phrases (and, in English,
+    /// common words). With nothing typed none of those has anything to do
+    /// with what the user is about to write, so they only cluttered the bar.
+    /// The built-in phrases still come up as completions once enough of one
+    /// has been typed — see `minimumTypedShare`. English never shows a
+    /// Bengali-script favourite, which would drop Bengali into an English
+    /// sentence.
     public var idleCandidates: [String] {
-        guard layout == .english else {
-            var seen = Set(pinnedKeywords)
-            return pinnedKeywords + CommonPhrases.bangla.filter { seen.insert($0).inserted }
-        }
-
-        let english = pinnedKeywords.filter { !Self.usesBengaliScript($0) }
-        guard english.count < 3 else { return english }
-
-        var result = english
-        for word in EnglishSuggestionService.idleWords {
-            guard result.count < 3 else { break }
-            guard !result.contains(where: { $0.caseInsensitiveCompare(word) == .orderedSame }) else { continue }
-            result.append(word)
-        }
-        return result
+        guard layout == .english else { return pinnedKeywords }
+        return pinnedKeywords.filter { !Self.usesBengaliScript($0) }
     }
 
     /// Whether a keyword needs Bengali script. A mixed keyword counts as

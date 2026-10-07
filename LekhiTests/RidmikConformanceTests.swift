@@ -62,7 +62,22 @@ final class RidmikConformanceTests: XCTestCase {
         ("sw", "স্ব"), ("shw", "শ্ব")
     ].map { Rule(latin: $0.0, bangla: $0.1, group: "conjunct") }
 
-    static var all: [Rule] { letters + kars + signs + conjuncts }
+    /// The worked examples from Ridmik's own cheat sheet.
+    static let cheatSheet: [Rule] = [
+        ("chOqqya", "ছোঁয়া"), ("bangla", "বাংলা"), ("oNggo", "অঙ্গ"), ("miNGa", "মিঞা"),
+        ("SwaSwoto", "শ্বাশ্বত"), ("SwaSwt", "শ্বাশ্বত"), ("oZanimeSon", "অ্যানিমেশন"),
+        ("rriN", "ঋণ"), ("brritto", "বৃত্ত"), ("urrdi", "উর্দি"), ("nirrmol", "নির্মল"),
+        ("kkh", "ক্ষ"), ("kkhN", "ক্ষ্ণ"), ("gg", "জ্ঞ"), ("nj", "ঞ্জ"), ("nc", "ঞ্চ"),
+        ("lokkhNOU", "লক্ষ্ণৌ"), ("korrtrritw", "কর্তৃত্ব"), ("shikSha", "শিক্ষা"),
+        ("shikkha", "শিক্ষা"), ("chatro", "ছাত্র"), ("bOIShNb", "বৈষ্ণব"), ("somudro", "সমুদ্র"),
+        ("ridmik", "রিদ্মিক"), ("brohmputro", "ব্রহ্মপুত্র"), ("moymonosingoh", "ময়মনসিংহ"),
+        ("shomvUgonj", "শম্ভূগঞ্জ"),
+        // hasanta after a consonant's inherent `o`, and a silent `o` after ং
+        ("sohsb", "স্ব"), ("sohsbami", "স্বামি"), ("kohst", "ক্ত"),
+        ("singoh", "সিংহ"), ("songo", "সং")
+    ].map { Rule(latin: $0.0, bangla: $0.1, group: "cheat sheet") }
+
+    static var all: [Rule] { letters + kars + signs + conjuncts + cheatSheet }
 
     private func compose(_ latin: String, with engine: LekhiEngine) -> Suggestion {
         engine.finishSession()
@@ -111,3 +126,37 @@ final class RidmikConformanceTests: XCTestCase {
         }
     }
 }
+
+
+
+// MARK: - Key positions
+
+/// Ridmik's key positions, so a Ridmik typist's thumbs land where they expect.
+final class RidmikLayoutTests: XCTestCase {
+
+    private func labels(_ row: KeyRow) -> [String] { row.keys.map(\.label) }
+
+    func testLettersMatchRidmik() {
+        let rows = KeyboardLayoutFactory.letters(isShifted: false, layout: .avroPhonetic, showsGlobeKey: false)
+        XCTAssertEqual(labels(rows[1]), Array("asdfghjkl").map(String.init))
+        XCTAssertTrue(rows[1].keys.allSatisfy { $0.widthWeight == 1 }, "home row is inset, not stretched")
+        XCTAssertEqual(labels(rows[3]), ["123", ",", "emoji", "space", ".", "↵"])
+    }
+
+    func testEmailSwapsCommaForAt() {
+        let rows = KeyboardLayoutFactory.letters(isShifted: false, layout: .english, showsGlobeKey: false, hostContext: .email)
+        XCTAssertEqual(labels(rows[3]), ["123", "@", "emoji", "space", ".", "↵"])
+    }
+
+    func testNumbersMatchRidmik() {
+        let bangla = KeyboardLayoutFactory.numbers(showsGlobeKey: false, layout: .avroPhonetic)
+        XCTAssertEqual(labels(bangla[1]), ["@", "#", "৳", "%", "&", "*", "-", "+", "(", ")"])
+        XCTAssertEqual(labels(bangla[2]), ["#+=", "!", "\"", "'", "ঃ", ";", "/", "?", "⌫"])
+        XCTAssertEqual(labels(bangla[3]), ["ABC", ",", "emoji", "space", ".", "↵"])
+
+        let english = KeyboardLayoutFactory.numbers(showsGlobeKey: false, layout: .english)
+        XCTAssertEqual(english[1].keys[2].label, "$")
+        XCTAssertEqual(english[2].keys[4].label, ":")
+    }
+}
+

@@ -70,6 +70,11 @@ public final class HapticManager: @unchecked Sendable {
     }
 
     /// Triggers a finely tuned haptic impulse matching the user's intensity preference.
+    ///
+    /// Each generator fires first and is re-armed afterwards. Calling
+    /// `prepare()` immediately before firing gave the Taptic Engine no time to
+    /// spin up, so it only added work on touch-down; preparing after the tap
+    /// readies it for the next keystroke instead.
     public func keyPress(isAction: Bool = false) {
         let intensity = HapticStore.current()
         guard intensity != .off else { return }
@@ -91,29 +96,29 @@ public final class HapticManager: @unchecked Sendable {
         case .light:
             // Subtle, crisp light keystroke tap
             if isAction {
-                lightGenerator.prepare()
                 lightGenerator.impactOccurred(intensity: 0.55)
+                lightGenerator.prepare()
             } else {
-                softGenerator.prepare()
                 softGenerator.impactOccurred(intensity: 0.48)
+                softGenerator.prepare()
             }
 
         case .medium:
             if isAction {
-                mediumGenerator.prepare()
                 mediumGenerator.impactOccurred(intensity: 0.75)
+                mediumGenerator.prepare()
             } else {
-                rigidGenerator.prepare()
                 rigidGenerator.impactOccurred(intensity: 0.65)
+                rigidGenerator.prepare()
             }
 
         case .strong:
             if isAction {
-                heavyGenerator.prepare()
                 heavyGenerator.impactOccurred(intensity: 1.0)
-            } else {
                 heavyGenerator.prepare()
+            } else {
                 heavyGenerator.impactOccurred(intensity: 0.9)
+                heavyGenerator.prepare()
             }
         }
     }
@@ -122,7 +127,7 @@ public final class HapticManager: @unchecked Sendable {
     public func candidateSelected() {
         let intensity = HapticStore.current()
         guard intensity != .off else { return }
-        selectionGenerator.prepare()
         selectionGenerator.selectionChanged()
+        selectionGenerator.prepare()
     }
 }

@@ -396,8 +396,12 @@ public final class KeyRouter {
     }
 
     /// Drop the one-shot shift after a character, but leave caps lock alone.
+    ///
+    /// Only writes when shift is actually on. `@Observable` notifies on every
+    /// assignment, equal value or not, and the key grid observes `isShifted`,
+    /// so clearing an already-clear shift rebuilt every keycap on every letter.
     private func consumeShift(_ session: InputSession) {
-        if !session.isCapsLocked {
+        if !session.isCapsLocked, session.isShifted {
             session.isShifted = false
         }
     }

@@ -155,12 +155,48 @@ public final class RitiEngine: LekhiEngine {
     }
 
     private func rewritten(_ term: String) -> String {
-        guard appliesShortcuts, !term.isEmpty,
-              let pointer = avro_apply_shortcuts(term) else {
-            return term
-        }
+        guard appliesShortcuts, !term.isEmpty else { return term }
+        let ridmik = Self.ridmikRewritten(term)
+        guard let pointer = avro_apply_shortcuts(ridmik) else { return ridmik }
         defer { riti_string_free(pointer) }
         return String(cString: pointer)
+    }
+
+    /// Ridmik spellings the shortcut layer does not know, rewritten into the
+    /// Avro riti reads. Runs before `avro_apply_shortcuts`.
+    ///
+    /// - Consonant + `ohs` is a hasanta. In Ridmik `o` after a consonant is
+    ///   only its inherent vowel, so `sohsb` is s + hs + b, স্ব. The shortcut
+    ///   layer only recognises `hs` straight after a consonant, so the `o` left
+    ///   the whole run as letters: সহসব.
+    /// - `ng` is always ং, and an `o` after it is silent: `moymonosingoh` is
+    ///   ময়মনসিংহ. Avro instead reads `ng` + vowel as ঙ্গ (সিঙ্গহ), so the `o`
+    ///   is dropped and Avro's separator keeps the ং from joining what follows.
+    ///   Only `o`: ঙ before other vowels (বাঙালি, রঙিন) is what riti already
+    ///   offers and what those words need.
+    static func ridmikRewritten(_ term: String) -> String {
+        guard term.contains("ohs") || term.contains("ngo") else { return term }
+        let chars = Array(term)
+        var out = ""
+        var i = 0
+        while i < chars.count {
+            let rest = chars[i...]
+            if rest.starts(with: "ohs"), i > 0, isLatinConsonant(chars[i - 1]) {
+                out += ",,"
+                i += 3
+            } else if rest.starts(with: "ngo") {
+                out += "ng`"
+                i += 3
+            } else {
+                out.append(chars[i])
+                i += 1
+            }
+        }
+        return out
+    }
+
+    private static func isLatinConsonant(_ c: Character) -> Bool {
+        c.isASCII && c.isLetter && !"aeiouAEIOU".contains(c)
     }
 
     public func commitCandidate(at index: Int) -> Suggestion {
@@ -216,7 +252,7 @@ public final class RitiEngine: LekhiEngine {
     /// non-joiner explicitly is exactly what that spelling is for — and at the
     /// end of a word, where `allahhs` should keep showing আল্লাহ্‌.
     private func joiningHandTypedHasanta(_ text: String) -> String {
-        guard appliesShortcuts, typed.contains("hs"), !typed.contains(",,") else { return text }
+        guard appliesShortcuts, typed.contains("hs"),!typed.contains(",,") else { return text }
 
         let scalars = Array(text.unicodeScalars)
         var output = String.UnicodeScalarView()

@@ -143,6 +143,22 @@ final class KeyboardViewController: UIInputViewController {
         super.viewDidAppear(animated)
         updateBackgroundTheme()
         updateKeyboardHeightConstraint()
+        stopSystemGesturesDelayingTouches()
+    }
+
+    /// The window a keyboard extension lives in carries the system's
+    /// screen-edge gesture recognizers, and they hold back `touchesBegan` near
+    /// the edges while they decide whether a system gesture is starting. That
+    /// is why the outer columns (q, a, shift, p, l, backspace) and the bottom
+    /// row lagged and dropped taps during fast typing while the middle keys
+    /// were fine. The keyboard has no use for that delay.
+    private func stopSystemGesturesDelayingTouches() {
+        var current: UIView? = view
+        while let v = current {
+            v.gestureRecognizers?.forEach { $0.delaysTouchesBegan = false }
+            current = v.superview
+        }
+        view.window?.gestureRecognizers?.forEach { $0.delaysTouchesBegan = false }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -297,16 +313,21 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func updateBackgroundTheme() {
-        switch session.theme {
-        case .amoledBlack, .darkMechanical:
-            overrideUserInterfaceStyle = .dark
-            hostingController?.overrideUserInterfaceStyle = .dark
-        case .classicLight, .retroBeige:
-            overrideUserInterfaceStyle = .light
-            hostingController?.overrideUserInterfaceStyle = .light
-        case .systemAuto:
-            overrideUserInterfaceStyle = .unspecified
-            hostingController?.overrideUserInterfaceStyle = .unspecified
+        let style: UIUserInterfaceStyle = {
+            switch session.theme {
+            case .amoledBlack, .darkMechanical: return .dark
+            case .classicLight, .retroBeige:    return .light
+            case .systemAuto:                   return .unspecified
+            }
+        }()
+        // Runs from `textDidChange`, i.e. after every keystroke. Only touch the
+        // overrides when they actually change, so an unchanged theme does not
+        // push a trait update through the whole SwiftUI tree each time.
+        if overrideUserInterfaceStyle != style {
+            overrideUserInterfaceStyle = style
+        }
+        if let hostingController, hostingController.overrideUserInterfaceStyle != style {
+            hostingController.overrideUserInterfaceStyle = style
         }
 
         let isDark: Bool = {
@@ -325,9 +346,11 @@ final class KeyboardViewController: UIInputViewController {
         // UIKit colour just covers the frame before SwiftUI's first pass.
         let bg: UIColor = Theme.usesRoundedContainer ? .clear : resolved.uiBackgroundPlate
 
-        viewIfLoaded?.backgroundColor = bg
-        inputView?.backgroundColor = bg
-        hostingController?.view.backgroundColor = .clear
+        if viewIfLoaded?.backgroundColor != bg { viewIfLoaded?.backgroundColor = bg }
+        if inputView?.backgroundColor != bg { inputView?.backgroundColor = bg }
+        if hostingController?.view.backgroundColor != .clear {
+            hostingController?.view.backgroundColor = .clear
+        }
 
         let usesContainer = Theme.usesRoundedContainer && themeMatchesSystemContainer()
         if session.plateUsesSystemContainer != usesContainer {
@@ -576,9 +599,8 @@ final class KeyboardViewController: UIInputViewController {
         isDispatching = true
         defer { isDispatching = false }
 
-        // Defensive: the direct-commit model never creates marked text, but
-        // clear any legacy composition so it can't offset delete counts.
-        textDocumentProxy.unmarkText()
+        // No `unmarkText()` here: the direct-commit model never creates marked
+        // text, and the call was one more round trip to the host per keystroke.
 
         let outcome = router.route(action)
 
