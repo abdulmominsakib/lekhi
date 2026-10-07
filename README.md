@@ -43,13 +43,17 @@
 
 ## 📱 Screenshots
 
-| Interactive Typing | Home Dashboard | Avro Cheat Sheet |
-| :---: | :---: | :---: |
-| ![Typing Playground](docs/assets/screenshots/01_hero_typing_playground.jpg) | ![Home Dashboard](docs/assets/screenshots/02_home_dashboard.jpg) | ![Cheat Sheet](docs/assets/screenshots/03_avro_cheatsheet.jpg) |
+<p align="center">
+  <img src="docs/assets/screenshots/01_bangla_likhun_onayase.jpg" alt="বাংলা লিখুন অনায়াসে — Type Bangla effortlessly" width="32%" />
+  <img src="docs/assets/screenshots/02_onubhob_korun_protiti_ki.jpg" alt="অনুভব করুন প্রতিটি কি — Feel every key" width="32%" />
+  <img src="docs/assets/screenshots/03_avro_shikhun_aro_shohoje.jpg" alt="অভ্র শিখুন আরও সহজে — Learn Avro faster" width="32%" />
+</p>
 
-| Typing Speed Test | Customization Settings | Engine & Privacy |
-| :---: | :---: | :---: |
-| ![Typing Speed Test](docs/assets/screenshots/04_typing_speed_test.jpg) | ![Settings](docs/assets/screenshots/05_settings_customization.jpg) | ![Privacy Specs](docs/assets/screenshots/06_privacy_and_engine.jpg) |
+<p align="center">
+  <img src="docs/assets/screenshots/04_typing_speed_bariye_nin.jpg" alt="টাইপিং স্পিড বাড়িয়ে নিন — Boost your typing speed" width="32%" />
+  <img src="docs/assets/screenshots/05_shajiye_nin_nijer_moto.jpg" alt="সাজিয়ে নিন নিজের মতো — Make it yours" width="32%" />
+  <img src="docs/assets/screenshots/06_apnar_lekha_shudhu_apnar.jpg" alt="আপনার লেখা শুধুই আপনার — Your writing stays yours" width="32%" />
+</p>
 
 ---
 
